@@ -1,6 +1,6 @@
 import hashlib
 import time
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from app.models import StudentRecordSchema, IntegrityStatusEnum, VerificationResponse
 
 
@@ -41,6 +41,9 @@ class IntegrityEngine:
         current_intake: int,
         intake_cap: int,
         existing_enrolments: List[Dict[str, str]],
+        email: Optional[str] = None,
+        enrollment_number: Optional[str] = None,
+        record_id: Optional[str] = None,
     ) -> StudentRecordSchema:
         """
         Evaluates candidate against:
@@ -82,17 +85,24 @@ class IntegrityEngine:
         merkle_root = cls.calculate_merkle_root([apaar_id, institute_code, status.value])
         ecdsa_sig = cls.generate_ecdsa_signature(apaar_id, institute_code, status.value)
 
-        return StudentRecordSchema(
-            apaar_id=apaar_id,
-            student_name=student_name,
-            institute_code=institute_code,
-            institute_name=institute_name,
-            programme=programme,
-            admission_year=admission_year,
-            integrity_status=status,
-            intake_current=current_intake,
-            intake_cap=intake_cap,
-            merkle_root=merkle_root,
-            ecdsa_signature=ecdsa_sig,
-            notes=notes,
-        )
+        schema_kwargs = {
+            "apaar_id": apaar_id,
+            "student_name": student_name,
+            "institute_code": institute_code,
+            "institute_name": institute_name,
+            "programme": programme,
+            "admission_year": admission_year,
+            "integrity_status": status,
+            "intake_current": current_intake,
+            "intake_cap": intake_cap,
+            "merkle_root": merkle_root,
+            "ecdsa_signature": ecdsa_sig,
+            "notes": notes,
+            "email": email,
+            "enrollment_number": enrollment_number,
+        }
+        if record_id:
+            schema_kwargs["id"] = record_id
+
+        return StudentRecordSchema(**schema_kwargs)
+

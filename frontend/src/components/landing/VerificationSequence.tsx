@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UploadCloud, CheckCircle2, SearchCode, Database, ShieldCheck, ArrowRight, Play } from 'lucide-react';
+import { UploadCloud, CheckCircle2, SearchCode, Database, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export const VerificationSequence: React.FC = () => {
   const [activeStep, setActiveStep] = useState<number>(0);
@@ -7,146 +7,110 @@ export const VerificationSequence: React.FC = () => {
   const steps = [
     {
       step: '01',
-      title: 'Institution Upload',
-      subtitle: 'Batch Enrolment Data',
+      title: 'Institution Ingestion',
+      subtitle: 'Enrolment Manifest Upload',
       description:
-        'AICTE-affiliated institutions securely submit semester or annual enrolment manifests via encrypted CSV batch uploader or automated API node.',
+        'AICTE-affiliated institutions submit student enrolment manifests via CSV batch upload or individual record addition.',
       icon: <UploadCloud className="w-5 h-5 text-[#2391FF]" />,
       badge: 'INGESTION',
-      code: 'POST /api/v1/enrolment/batch-stream',
+      code: 'POST /api/imports/batch',
     },
     {
       step: '02',
-      title: 'APAAR Validation',
-      subtitle: 'Identity Synthetics & Format',
+      title: 'APAAR Structure Validation',
+      subtitle: 'Format & Character Checks',
       description:
-        'The ingestion gateway parses 12-digit APAAR identifiers, verifies Luhn checksums, and queries the local synthetic identity cache for validity.',
+        'The ingestion gateway validates 12-digit APAAR alphanumeric identifiers and verifies format validity.',
       icon: <CheckCircle2 className="w-5 h-5 text-[#FFF83F]" />,
       badge: 'VERIFICATION',
-      code: 'VERIFY { apaar: "9024-8172-5501-IN" }',
+      code: 'VALIDATE { apaar_id: "9024-8172-5501-IN" }',
     },
     {
       step: '03',
-      title: 'Integrity Analysis',
-      subtitle: 'Duplicate & Quota Engine',
+      title: 'Integrity Cross-Check',
+      subtitle: 'Duplicate & Seat Quota Evaluation',
       description:
-        'The core engine tests for multi-institution collision (e.g. concurrent B.Tech enrolments in two universities) and ensures AICTE approved intake seat caps are respected.',
+        'The engine checks for multi-institution concurrent enrolments and verifies student counts against sanctioned intake limits.',
       icon: <SearchCode className="w-5 h-5 text-[#F70063]" />,
       badge: 'CROSS-CHECK',
-      code: 'COLLISION_DETECT: 0 FOUND (CLEAN)',
+      code: 'INTEGRITY_CHECK: EVALUATE_COLLISION()',
     },
     {
       step: '04',
-      title: 'Central Repository',
-      subtitle: 'Cryptographic Ledger Seal',
+      title: 'Ledger Recording',
+      subtitle: 'Merkle Digest Generation',
       description:
-        'Clean academic records receive an internal immutable UUID, ECDSA digital signature, and Merkle tree root hash stored in the central regulatory ledger.',
+        'Records are added to the active regulatory ledger, calculating deterministic Merkle batch hashes for verifiable auditing.',
       icon: <Database className="w-5 h-5 text-[#2391FF]" />,
-      badge: 'IMMUTABLE SEED',
-      code: 'ECDSA_SIG: 0x8F72B4...C09A11',
+      badge: 'RECORDED',
+      code: 'MERKLE_ROOT: 0x99238E...DB30',
     },
     {
       step: '05',
       title: 'Authorized Verification',
-      subtitle: 'Instant QR & Portal Proof',
+      subtitle: 'Query & Verification Portal',
       description:
-        'Authorized verifiers, employers, embassies, and regulatory auditors verify credentials in seconds using signed QR receipts or direct public sandbox query.',
+        'Authorized auditors and institutions verify credentials on demand using the verification sandbox portal.',
       icon: <ShieldCheck className="w-5 h-5 text-[#FFCD54]" />,
-      badge: 'CERTIFIED RECEIPT',
-      code: 'STATUS: VALIDATED BY AICTE ENGINE',
+      badge: 'VERIFIED RESULT',
+      code: 'GET /api/verify/apaar?apaar_id=...',
     },
   ];
 
   return (
-    <section id="how-it-works" className="py-24 relative overflow-hidden bg-[#080F20]/50 border-y border-white/5">
+    <section id="how-it-works" className="py-20 relative bg-[var(--color-bg-main)] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFF83F]/15 border border-[#FFF83F]/30 text-[#FFF83F] text-xs font-mono-code mb-4 shadow-[0_0_15px_rgba(255,248,63,0.2)]">
-            <Play className="w-3 h-3 fill-current" />
-            <span>5-STAGE VERIFICATION LIFECYCLE</span>
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-brand-blue)]/10 border border-[var(--color-brand-blue)]/25 text-[var(--color-brand-blue)] text-xs font-semibold mb-3">
+            <span>HOW IT WORKS</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
-            How The <span className="text-gradient-cyan">Integrity Pipeline</span> Operates
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--color-text-primary)]">
+            5-Stage Verification Protocol
           </h2>
-          <p className="mt-4 text-base sm:text-lg text-[#A6B4CC] leading-relaxed">
-            From decentralized institution bulk uploads to cryptographically signed verification receipts, each record undergoes automated validation.
+          <p className="mt-2 text-sm sm:text-base text-[var(--color-text-secondary)]">
+            From institutional bulk submission to instant cryptographic verification.
           </p>
         </div>
 
-        {/* Step Sequence Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
-          {steps.map((item, index) => {
-            const isCurrent = activeStep === index;
-            return (
-              <div
-                key={item.step}
-                onClick={() => setActiveStep(index)}
-                className={`glass-panel p-5 rounded-2xl border transition-all duration-300 cursor-pointer flex flex-col justify-between ${
-                  isCurrent
-                    ? 'border-[#2391FF] bg-[#101B32]/90 shadow-[0_0_25px_rgba(35,145,255,0.25)] scale-[1.02]'
-                    : 'border-white/10 hover:border-white/20 hover:bg-white/5 opacity-80 hover:opacity-100'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono-code font-bold px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/10">
-                      STEP {item.step}
-                    </span>
-                    <div className="w-8 h-8 rounded-xl bg-[#080F20] border border-white/10 flex items-center justify-center">
-                      {item.icon}
-                    </div>
-                  </div>
-
-                  <h3 className="text-base font-bold text-white mb-1">{item.title}</h3>
-                  <div className="text-xs font-medium text-[#2391FF] mb-3">{item.subtitle}</div>
-                  <p className="text-xs text-[#A6B4CC] leading-relaxed mb-4">{item.description}</p>
-                </div>
-
-                <div className="pt-3 border-t border-white/10">
-                  <div className="text-[10px] font-mono-code text-slate-400 bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/5 truncate">
-                    {item.code}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Live Simulator Preview of selected step */}
-        <div className="mt-10 glass-panel-elevated p-6 rounded-3xl border border-[#2391FF]/30 max-w-4xl mx-auto shadow-2xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-[#2391FF] animate-ping" />
-              <div>
-                <span className="text-xs font-mono-code text-slate-400 uppercase tracking-wider">
-                  Live Stage Telemetry Feed
+        {/* Step Cards Horizontal Timeline */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {steps.map((st, idx) => (
+            <div
+              key={st.step}
+              onClick={() => setActiveStep(idx)}
+              className={`app-card p-5 cursor-pointer transition-all ${
+                activeStep === idx
+                  ? 'border-[var(--color-brand-blue)] shadow-md'
+                  : 'hover:border-[var(--color-border-highlight)]'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-mono-code font-bold text-xs text-[var(--color-brand-blue)]">
+                  {st.step}
                 </span>
-                <h4 className="text-lg font-bold text-white">
-                  Stage {steps[activeStep].step} — {steps[activeStep].title}
-                </h4>
+                <div className="p-1.5 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)]">
+                  {st.icon}
+                </div>
+              </div>
+
+              <h3 className="font-bold text-sm text-[var(--color-text-primary)] mb-1">
+                {st.title}
+              </h3>
+              <div className="text-[11px] text-[var(--color-brand-blue)] font-medium mb-2">
+                {st.subtitle}
+              </div>
+
+              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed mb-4">
+                {st.description}
+              </p>
+
+              <div className="pt-3 border-t border-[var(--color-border-subtle)]">
+                <span className="text-[10px] font-mono-code text-[var(--color-text-muted)] truncate block">
+                  {st.code}
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono-code px-3 py-1 rounded-full bg-[#2391FF]/15 text-[#2391FF] border border-[#2391FF]/30">
-                AICTE Engine Sandbox: Normal
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono-code">
-            <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-              <span className="text-slate-400 block mb-1">// Ingestion Hash</span>
-              <span className="text-[#60A5FA]">SHA-256: 0x9b72a4...de8190</span>
-            </div>
-            <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-              <span className="text-slate-400 block mb-1">// Cross-Institution Sync</span>
-              <span className="text-[#FFF83F]">10,482 Institutes Monitored</span>
-            </div>
-            <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-              <span className="text-slate-400 block mb-1">// Verification Latency</span>
-              <span className="text-[#2391FF]">&lt; 140ms Automated Proof</span>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

@@ -1,102 +1,87 @@
 import React from 'react';
-import { ShieldCheck, Lock, KeyRound, History, FileCheck, Ban, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Lock, KeyRound, History, FileCheck, Ban } from 'lucide-react';
 
 export const SecuritySection: React.FC = () => {
   const securityPillars = [
     {
-      title: 'Role-Based Sovereign Authorization (RBAC)',
+      title: 'Role-Based Access Control (RBAC)',
       description:
-        'Granular partition between Institution Data Nodes, AICTE Central Regulatory Auditors, and Public Verification Entities. Self-assignment of regulator status is strictly forbidden.',
+        'Granular partition between Institution Verifiers and AICTE Central Regulatory Administrators. Self-assignment of administrative regulator status is strictly prevented.',
       icon: <KeyRound className="w-5 h-5 text-[#2391FF]" />,
     },
     {
-      title: 'Cryptographic Merkle Audit Trails',
+      title: 'Merkle Tree Audit Verification',
       description:
-        'Immutable event logging for all data transactions, intake modifications, and verification requests, enabling non-repudiation and regulatory auditing.',
+        'Deterministic hash tree generation for batches of records, enabling verifiable and tamper-evident audit trails.',
       icon: <History className="w-5 h-5 text-[#FFF83F]" />,
     },
     {
-      title: 'Privacy-Aware DPDPA Consent Protocols',
+      title: 'Privacy-Preserving Identifier Masking',
       description:
-        'Direct compliance with Indian Digital Personal Data Protection Act (DPDPA). Real APAAR identities are masked, using synthetic tokens in sandbox and encrypted digests in logs.',
+        'APAAR identifiers are masked by default across dashboard views, revealing sensitive details only on demand by authenticated personnel.',
       icon: <Lock className="w-5 h-5 text-[#2391FF]" />,
     },
     {
-      title: 'Immutable Academic Versioning',
+      title: 'Session & Intake Validation',
       description:
-        'Student semester completions, degree certificates, and transfers are versioned cryptographically, completely precluding retroactive seat tampering or diploma counterfeiting.',
-      icon: <FileCheck className="w-5 h-5 text-[#60A5FA]" />,
+        'Student enrolment session records are validated against sanctioned seat quotas, preventing retroactive seat inflation.',
+      icon: <FileCheck className="w-5 h-5 text-[#2391FF]" />,
     },
     {
-      title: 'Revocable Cryptographic Receipts',
+      title: 'Immediate Collision Invalidation',
       description:
-        'Should an admission discrepancy, dual-registration collision, or disciplinary sanction occur, verification receipts are invalidated immediately across the registry.',
+        'Should an admission conflict or duplicate enrolment be flagged, verification records reflect the conflict immediately.',
       icon: <Ban className="w-5 h-5 text-[#F70063]" />,
     },
     {
-      title: 'Zero-Knowledge Credential Proofs',
+      title: 'Verifiable Receipts',
       description:
-        'Third-party employers can verify that a candidate graduated from an accredited AICTE programme without accessing personal private data or sovereign Aadhaar/APAAR seed keys.',
+        'Each verified record generates a unique cryptographic digest receipt for reference by institutions and regulatory auditors.',
       icon: <ShieldCheck className="w-5 h-5 text-[#FFCD54]" />,
     },
   ];
 
   return (
-    <section id="security" className="py-24 relative overflow-hidden">
+    <section id="security" className="py-20 relative bg-[var(--color-bg-secondary)] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Column: Heading & Trust Architecture */}
+          {/* Left Column: Heading & Governance */}
           <div className="lg:col-span-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2391FF]/15 border border-[#2391FF]/30 text-[#2391FF] text-xs font-mono-code mb-4 shadow-[0_0_15px_rgba(35,145,255,0.2)]">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#2391FF]" />
-              <span>ENTERPRISE GOVERNANCE ARCHITECTURE</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-brand-blue)]/10 border border-[var(--color-brand-blue)]/25 text-[var(--color-brand-blue)] text-xs font-semibold mb-3">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>GOVERNANCE &amp; SECURITY</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
-              Trust Built On <span className="text-gradient-blue">Cryptographic Rigor</span>, Not Promises.
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--color-text-primary)] leading-tight">
+              Rigorous Security &amp; Institutional Governance
             </h2>
-            <p className="mt-4 text-base text-[#A6B4CC] leading-relaxed">
-              VIDYA-VERIFY enforces strict mathematical verification bounds. Designed explicitly for AICTE Problem Statement 26263, our security architecture ensures total institutional accountability.
+            <p className="mt-3 text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              VIDYA-VERIFY enforces strict verification bounds designed explicitly for AICTE Problem Statement 26263, ensuring complete institutional accountability.
             </p>
 
-            <div className="mt-8 space-y-3">
-              <div className="flex items-center gap-3 text-sm text-slate-200">
-                <CheckCircle className="w-4 h-4 text-[#FFF83F] shrink-0" />
-                <span>Zero unencrypted student PII stored or exposed in URLs</span>
+            <div className="mt-8 p-4 rounded-2xl app-card">
+              <div className="text-xs font-semibold text-[var(--color-brand-blue)] mb-1">
+                AICTE PROBLEM STATEMENT 26263 COMPLIANT
               </div>
-              <div className="flex items-center gap-3 text-sm text-slate-200">
-                <CheckCircle className="w-4 h-4 text-[#2391FF] shrink-0" />
-                <span>Sandbox adapter architecture with simulated responses clearly marked</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-slate-200">
-                <CheckCircle className="w-4 h-4 text-[#FFCD54] shrink-0" />
-                <span>Automated dual-enrolment detection across 10,000+ technical colleges</span>
-              </div>
-            </div>
-
-            <div className="mt-8 p-4 rounded-2xl glass-panel border border-[#2391FF]/20 bg-[#080F20]/70">
-              <div className="text-xs font-mono-code text-slate-400 mb-1">
-                // REGULATORY COMPLIANCE DIRECTIVE
-              </div>
-              <div className="text-sm font-semibold text-white">
-                All demonstration telemetry uses synthesized non-production records to safeguard privacy while proving full architectural readiness.
-              </div>
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                Ensures single-institution enrolment integrity, approved intake monitoring, and format validation for all technical students.
+              </p>
             </div>
           </div>
 
-          {/* Right Column: 6 Security Pillars Grid */}
+          {/* Right Column: Pillars Grid */}
           <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {securityPillars.map((pillar) => (
+            {securityPillars.map((pillar, idx) => (
               <div
-                key={pillar.title}
-                className="glass-panel p-5 rounded-2xl border border-white/10 hover:border-[#2391FF]/40 transition-all duration-300 hover:-translate-y-1 group"
+                key={idx}
+                className="app-card p-5 hover:border-[var(--color-border-highlight)] transition-all"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#080F20] border border-white/10 flex items-center justify-center mb-4 group-hover:scale-105 group-hover:border-[#2391FF]/50 transition-all">
+                <div className="w-9 h-9 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex items-center justify-center mb-3">
                   {pillar.icon}
                 </div>
-                <h3 className="text-base font-bold text-white mb-2 group-hover:text-[#2391FF] transition-colors">
+                <h3 className="text-sm font-bold text-[var(--color-text-primary)] mb-1.5">
                   {pillar.title}
                 </h3>
-                <p className="text-xs text-[#A6B4CC] leading-relaxed">
+                <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                   {pillar.description}
                 </p>
               </div>

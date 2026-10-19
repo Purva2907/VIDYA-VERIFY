@@ -6,9 +6,6 @@ import {
   Cpu,
   QrCode,
   LineChart,
-  ArrowUpRight,
-  ShieldAlert,
-  CheckCircle,
 } from 'lucide-react';
 
 interface FeatureItem {
@@ -16,7 +13,7 @@ interface FeatureItem {
   title: string;
   description: string;
   icon: React.ReactNode;
-  accent: string;
+  accentBorder: string;
   badge: string;
   metric: string;
 }
@@ -27,115 +24,105 @@ export const FeatureCards: React.FC = () => {
       id: 'apaar-validation',
       title: 'APAAR Identity Validation',
       description:
-        'Zero-knowledge format validation and cryptographic hash matching for One Nation, One Student ID (APAAR) across institutions.',
+        'Format validation and hash verification for One Nation, One Student ID (APAAR) across participating institutions.',
       icon: <Fingerprint className="w-6 h-6 text-[#2391FF]" />,
-      accent: 'border-[#2391FF]/40 hover:border-[#2391FF]',
-      badge: 'CORE ENGINE',
-      metric: '12-Digit APAAR Format Verification',
+      accentBorder: 'border-[#2391FF]/30 hover:border-[#2391FF]',
+      badge: 'FORMAT VERIFICATION',
+      metric: '12-Digit Structure Checks',
     },
     {
       id: 'duplicate-detection',
       title: 'Cross-Institution Duplicate Detection',
       description:
-        'Real-time collision indexing preventing simultaneous dual-enrolments across separate AICTE approved universities and campuses.',
+        'Cross-enrolment indexing preventing simultaneous dual-enrolments across separate AICTE approved universities and campuses.',
       icon: <CopyX className="w-6 h-6 text-[#F70063]" />,
-      accent: 'border-[#F70063]/40 hover:border-[#F70063]',
+      accentBorder: 'border-[#F70063]/30 hover:border-[#F70063]',
       badge: 'COLLISION SHIELD',
-      metric: 'Zero-Collision Cross-Match Protocol',
+      metric: 'Dual-Enrolment Prevention',
     },
     {
       id: 'intake-monitoring',
       title: 'Approved Intake Monitoring',
       description:
-        'Continuous comparison of registered students against sanctioned AICTE intake quotas, immediately highlighting unauthorized admissions.',
+        'Comparison of registered students against sanctioned AICTE intake quotas, immediately highlighting unauthorized admissions.',
       icon: <Gauge className="w-6 h-6 text-[#FFCD54]" />,
-      accent: 'border-[#FFCD54]/40 hover:border-[#FFCD54]',
+      accentBorder: 'border-[#FFCD54]/30 hover:border-[#FFCD54]',
       badge: 'REGULATORY CAP',
-      metric: '100% Quota Enforcement Alerting',
+      metric: 'Sanctioned Seat Compliance',
     },
     {
       id: 'anomaly-detection',
-      title: 'Intelligent Anomaly Detection',
+      title: 'Automated Audit Intelligence',
       description:
-        'Automated telemetry scanning for irregular submission velocities, inconsistent academic timelines, and synthetic identity injections.',
-      icon: <Cpu className="w-6 h-6 text-[#FFF83F]" />,
-      accent: 'border-[#FFF83F]/40 hover:border-[#FFF83F]',
-      badge: 'INTEGRITY AUDIT',
-      metric: 'Instant Batch Integrity Analysis',
+        'Validation checks for irregular admission entries, duplicate identifiers, and quota threshold violations.',
+      icon: <Cpu className="w-6 h-6 text-[#2391FF]" />,
+      accentBorder: 'border-[#2391FF]/30 hover:border-[#2391FF]',
+      badge: 'AUDIT AUTOMATION',
+      metric: 'Automated Anomaly Scoring',
     },
     {
-      id: 'qr-verification',
-      title: 'Secure Record & QR Verification',
+      id: 'tamper-evident-credentials',
+      title: 'Verifiable Verification Receipts',
       description:
-        'Tamper-evident verification receipts and cryptographically signed QR codes for third-party employers, agencies, and embassies.',
-      icon: <QrCode className="w-6 h-6 text-[#2391FF]" />,
-      accent: 'border-[#2391FF]/40 hover:border-[#2391FF]',
-      badge: 'VERIFIED CREDENTIAL',
-      metric: 'ECDSA Signed Digital Ledger Receipts',
+        'Instant verification receipts with cryptographic digest hashes, providing provable confirmation of authenticity.',
+      icon: <QrCode className="w-6 h-6 text-[#FFF83F]" />,
+      accentBorder: 'border-[#FFF83F]/30 hover:border-[#FFF83F]',
+      badge: 'VERIFIABLE RECEIPTS',
+      metric: 'Tamper-Evident Digest',
     },
     {
-      id: 'regulatory-analytics',
-      title: 'Regulatory Analytics & Telemetry',
+      id: 'regulatory-telemetry',
+      title: 'Institutional Administration',
       description:
-        'Macro-level compliance dashboards for AICTE bureaus with regional enrolment heatmaps, branch-wise distribution, and audit logs.',
-      icon: <LineChart className="w-6 h-6 text-[#60A5FA]" />,
-      accent: 'border-[#2391FF]/40 hover:border-[#2391FF]',
-      badge: 'NATIONAL OVERSIGHT',
-      metric: 'Realtime Institutional Compliance',
+        'Real-time enrollment summaries and statistics for AICTE regulation bureaus and institutional nodals.',
+      icon: <LineChart className="w-6 h-6 text-[#2391FF]" />,
+      accentBorder: 'border-[#2391FF]/30 hover:border-[#2391FF]',
+      badge: 'REGULATION LEDGER',
+      metric: 'Active Campus Insights',
     },
   ];
 
   return (
-    <section id="features" className="py-24 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/2 left-0 w-96 h-96 rounded-full bg-[#2391FF]/10 blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-[#F70063]/10 blur-[130px] pointer-events-none" />
-
+    <section id="features" className="py-20 relative bg-[var(--color-bg-secondary)] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2391FF]/15 border border-[#2391FF]/30 text-[#2391FF] text-xs font-mono-code mb-4 shadow-[0_0_15px_rgba(35,145,255,0.2)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FFF83F] animate-pulse" />
-            <span>AICTE REGULATION BUREAU · HIGH-INTEGRITY SUITE</span>
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-brand-blue)]/10 border border-[var(--color-brand-blue)]/25 text-[var(--color-brand-blue)] text-xs font-semibold mb-3">
+            <span>CORE ARCHITECTURE</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
-            Architecture for Complete <span className="text-gradient-blue">Student Record Integrity</span>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--color-text-primary)]">
+            Academic Verification &amp; Enrolment Integrity
           </h2>
-          <p className="mt-4 text-base sm:text-lg text-[#A6B4CC] leading-relaxed">
-            Eliminating duplicate admissions, fraudulent identity credentials, and intake seat violations across India&apos;s higher technical education landscape.
+          <p className="mt-2 text-sm sm:text-base text-[var(--color-text-secondary)]">
+            A comprehensive suite for AICTE-approved institutions to maintain transparent records and detect enrolment discrepancies.
           </p>
         </div>
 
-        {/* 6 Glassmorphic Feature Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((item) => (
+          {features.map((feature) => (
             <div
-              key={item.id}
-              className={`glass-panel p-7 rounded-3xl border transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between group shadow-xl ${item.accent}`}
+              key={feature.id}
+              className={`app-card p-6 border ${feature.accentBorder} transition-all duration-200 flex flex-col justify-between`}
             >
               <div>
-                {/* Header row with Icon and Badge */}
-                <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-[#080F20] border border-white/10 flex items-center justify-center group-hover:scale-105 group-hover:border-[#2391FF]/50 transition-all shadow-inner">
-                    {item.icon}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-2.5 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)]">
+                    {feature.icon}
                   </div>
-                  <span className="text-[10px] font-mono-code px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 uppercase tracking-wider">
-                    {item.badge}
+                  <span className="text-[10px] font-mono-code font-bold text-[var(--color-text-muted)] tracking-wider">
+                    {feature.badge}
                   </span>
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-2.5 group-hover:text-[#2391FF] transition-colors">
-                  {item.title}
+                <h3 className="text-base font-bold text-[var(--color-text-primary)] mb-2">
+                  {feature.title}
                 </h3>
-                <p className="text-sm text-[#A6B4CC] leading-relaxed mb-6">
-                  {item.description}
+                <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                  {feature.description}
                 </p>
               </div>
 
-              {/* Metric bar */}
-              <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono-code">
-                <span className="text-slate-400">{item.metric}</span>
-                <ArrowUpRight className="w-4 h-4 text-[#2391FF] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              <div className="mt-5 pt-3.5 border-t border-[var(--color-border-subtle)] text-[11px] font-mono-code text-[var(--color-text-muted)]">
+                {feature.metric}
               </div>
             </div>
           ))}

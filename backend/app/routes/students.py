@@ -1,91 +1,143 @@
 from typing import List, Optional
-from fastapi import APIRouter, Query, HTTPException
-from app.models import StudentRecordSchema, IntegrityStatusEnum
+from fastapi import APIRouter, Query, HTTPException, Header, status
+from app.models import (
+    StudentRecordSchema,
+    StudentCreateRequest,
+    IntegrityStatusEnum,
+    RoleEnum,
+)
+from app.db import (
+    STUDENT_LEDGER,
+    SAMPLE_DEMO_STUDENTS,
+    get_current_user_from_token,
+)
 from app.services.integrity_engine import IntegrityEngine
 
 router = APIRouter(prefix="/api/students", tags=["Students"])
 
-# In-memory demo ledger dataset
-DEMO_STUDENTS: List[StudentRecordSchema] = [
-    StudentRecordSchema(
-        apaar_id="9024-8172-5501-IN",
-        student_name="Aarav V. Suryavanshi",
-        institute_code="IND-AICTE-1042",
-        institute_name="Indian Institute of Technology, Delhi",
-        programme="B.Tech Computer Science & AI",
-        admission_year="2023-2027",
-        integrity_status=IntegrityStatusEnum.VERIFIED,
-        intake_current=120,
-        intake_cap=120,
-        merkle_root="0x99238E10BC4489DF11234858900ACDB30",
-        ecdsa_signature="0x8F72B4DE99A1C09A11FE848911C49A098E",
-        notes="Verified non-exceeding. Zero collisions.",
-    ),
-    StudentRecordSchema(
-        apaar_id="3391-4412-8920-IN",
-        student_name="Priya N. Kulkarni",
-        institute_code="COLLISION: DEL/MUM",
-        institute_name="Mumbai Tech University // Delhi Tech Campus",
-        programme="B.Tech Information Technology",
-        admission_year="2024-2028",
-        integrity_status=IntegrityStatusEnum.DUPLICATE,
-        intake_current=115,
-        intake_cap=120,
-        merkle_root="0x4488A019DF77C3908811AA223399BCDE",
-        ecdsa_signature="0xCOLLISION_ALERT_HASH_00994411",
-        notes="CRITICAL COLLISION: Concurrent dual enrolment in 2 institutions.",
-    ),
-    StudentRecordSchema(
-        apaar_id="7721-1049-3382-IN",
-        student_name="Rohan M. Nair",
-        institute_code="IND-AICTE-4891",
-        institute_name="Southern Institute of Engineering, Bangalore",
-        programme="B.Tech Electronics & Comm.",
-        admission_year="2024-2028",
-        integrity_status=IntegrityStatusEnum.WARNING,
-        intake_current=124,
-        intake_cap=120,
-        merkle_root="0x8899FFAA112233445566778899AABBCC",
-        ecdsa_signature="0xINTAKE_CAP_EXCEEDED_124_OF_120",
-        notes="SANCTIONED INTAKE EXCEEDED: 124 admitted against 120 quota cap.",
-    ),
-    StudentRecordSchema(
-        apaar_id="5512-9014-2281-IN",
-        student_name="Ananya S. Iyer",
-        institute_code="IND-AICTE-2204",
-        institute_name="National Institute of Technology, Trichy",
-        programme="B.Tech Mechanical Engineering",
-        admission_year="2024-2028",
-        integrity_status=IntegrityStatusEnum.VERIFIED,
-        intake_current=90,
-        intake_cap=90,
-        merkle_root="0x11223344556677889900AABBCCDDEEFF",
-        ecdsa_signature="0xFE849011C09A118F72B4DE99A1C09A11",
-        notes="Verified clean record.",
-    ),
-]
-
 
 @router.get("", response_model=List[StudentRecordSchema])
 def list_students(
-    search: Optional[str] = Query(None, description="Search by name, APAAR ID, or campus"),
-    status: Optional[IntegrityStatusEnum] = Query(None, description="Filter by status"),
+    search: Optional[str] = Query(None, description="Search by name, APAAR ID, email, enrollment no, or institute"),
+    status: Optional[IntegrityStatusEnum] = Query(None, description="Filter by integrity status"),
+    scope: Optional[str] = Query("all", description="Record visibility: 'all' or 'my_institution'"),
+    authorization: Optional[str] = Header(None),
 ):
-    results = DEMO_STUDENTS
-    if search:
-        s = search.lower()
+    results = list(STUDENT_LEDGER)
+    clean_scope = scope if isinstance(scope, str) else "all"
+
+    # If scoped specifically to institutional node records
+    if authorization and isinstance(authorization, str) and clean_scope == "my_institution":
+        user = get_current_user_from_token(authorization)
+        if user and user.get("role") == RoleEnum.NODE and user.get("institute_id"):
+            inst_code = user["institute_id"]
+            results = [
+                r for r in results
+                if inst_code in r.institute_code or inst_code in (r.notes or "") or "COLLISION" in r.institute_code
+            ]
+
+    if search and isinstance(search, str):
+        s = search.lower().strip()
         results = [
             r for r in results
-            if s in r.student_name.lower() or s in r.apaar_id.lower() or s in r.institute_name.lower()
+            if s in r.student_name.lower()
+            or s in r.apaar_id.lower()
+            or s in r.institute_name.lower()
+            or s in r.programme.lower()
+            or (r.email and s in r.email.lower())
+            or (r.enrollment_number and s in r.enrollment_number.lower())
         ]
-    if status:
+
+    if status and isinstance(status, IntegrityStatusEnum):
         results = [r for r in results if r.integrity_status == status]
+
     return results
 
 
-@router.get("/{apaar_id}", response_model=StudentRecordSchema)
-def get_student_by_apaar(apaar_id: str):
-    for r in DEMO_STUDENTS:
-        if r.apaar_id == apaar_id:
+@router.get("/{identifier}", response_model=StudentRecordSchema)
+def get_student_by_identifier(identifier: str):
+    """Fetches full student record by database record ID or APAAR ID."""
+    clean_id = identifier.strip().lower()
+    for r in STUDENT_LEDGER:
+        if r.apaar_id.strip().lower() == clean_id or r.id.strip().lower() == clean_id:
             return r
-    raise HTTPException(status_code=404, detail="Student APAAR record not found in ledger.")
+    raise HTTPException(status_code=404, detail=f"Student record '{identifier}' not found in ledger.")
+
+
+@router.post("", response_model=StudentRecordSchema, status_code=status.HTTP_201_CREATED)
+def add_student(payload: StudentCreateRequest):
+    # Check if student with same APAAR ID already exists in this institution
+    inst_code = payload.institute_code or payload.institution_code or "IND-AICTE-1042"
+    inst_name = payload.institute_name or payload.institution_name or "Delhi Institute of Technology"
+    course = payload.programme or payload.course or "B.Tech General"
+    year = payload.admission_year or payload.academic_year or "2024-2028"
+
+    for existing in STUDENT_LEDGER:
+        if existing.apaar_id.strip() == payload.apaar_id.strip() and existing.institute_code == inst_code:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Candidate with APAAR ID {payload.apaar_id} is already enrolled in {inst_name}.",
+            )
+
+    # Evaluate integrity using the engine
+    existing_enrolments = [
+        {"apaar_id": s.apaar_id, "institute_code": s.institute_code, "institute_name": s.institute_name}
+        for s in STUDENT_LEDGER
+    ]
+
+    curr_intake = payload.intake_current or 60
+    cap = payload.intake_cap or 60
+
+    evaluated = IntegrityEngine.evaluate_student_integrity(
+        apaar_id=payload.apaar_id.strip(),
+        student_name=payload.student_name.strip(),
+        institute_code=inst_code,
+        institute_name=inst_name,
+        programme=course,
+        admission_year=year,
+        current_intake=curr_intake,
+        intake_cap=cap,
+        existing_enrolments=existing_enrolments,
+        email=payload.email,
+        enrollment_number=payload.enrollment_number,
+    )
+
+    if payload.notes:
+        evaluated.notes = f"{evaluated.notes} | {payload.notes}"
+
+    STUDENT_LEDGER.insert(0, evaluated)
+    return evaluated
+
+
+
+@router.delete("/{apaar_id}")
+def delete_student(apaar_id: str):
+    global STUDENT_LEDGER
+    initial_len = len(STUDENT_LEDGER)
+    STUDENT_LEDGER[:] = [s for s in STUDENT_LEDGER if s.apaar_id != apaar_id]
+    if len(STUDENT_LEDGER) == initial_len:
+        raise HTTPException(status_code=404, detail="Student record not found.")
+    return {"status": "success", "message": f"Student record {apaar_id} removed from ledger."}
+
+
+@router.post("/seed-demo")
+def seed_demo_data():
+    """Populates small, explicitly marked sample demonstration records."""
+    STUDENT_LEDGER.clear()
+    STUDENT_LEDGER.extend(SAMPLE_DEMO_STUDENTS)
+    return {
+        "status": "success",
+        "message": f"Loaded {len(SAMPLE_DEMO_STUDENTS)} sample demonstration records.",
+        "count": len(STUDENT_LEDGER),
+    }
+
+
+@router.post("/clear-all")
+def clear_all_data():
+    """Clears ledger to test zero-data / empty state behavior."""
+    STUDENT_LEDGER.clear()
+    return {
+        "status": "success",
+        "message": "Student ledger cleared. Empty state active.",
+        "count": 0,
+    }
