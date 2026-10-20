@@ -48,7 +48,7 @@ export const ProfilePage: React.FC = () => {
   if (!user) return null;
 
   const isAuditor = user.role === 'auditor';
-  const roleLabel = isAuditor ? 'AICTE Central Administrator' : 'Institution Verifier';
+  const roleLabel = isAuditor ? 'Platform Administrator' : 'Institution Administrator';
 
   const getInitials = (name: string) => {
     return name

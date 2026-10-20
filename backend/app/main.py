@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth, verify, students, imports, analytics
+from app.routes import auth, verify, students, imports, analytics, institutions, findings, audit, reports
 
 app = FastAPI(
     title="VIDYA-VERIFY — AICTE Student Integrity & Verification Platform API",
@@ -8,10 +8,15 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS Middleware
+import os
+
+# CORS Middleware with environment override
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS")
+origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()] if allowed_origins_env else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,6 +28,10 @@ app.include_router(verify.router)
 app.include_router(students.router)
 app.include_router(imports.router)
 app.include_router(analytics.router)
+app.include_router(institutions.router)
+app.include_router(findings.router)
+app.include_router(audit.router)
+app.include_router(reports.router)
 
 
 @app.get("/")

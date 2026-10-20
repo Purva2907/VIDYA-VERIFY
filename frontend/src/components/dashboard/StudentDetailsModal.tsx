@@ -23,25 +23,40 @@ import {
 } from 'lucide-react';
 
 interface StudentDetailsModalProps {
-  studentId: string | null;
+  studentId?: string | null;
   initialRecord?: StudentRecord | null;
+  isOpen?: boolean;
+  student?: StudentRecord | null;
   onClose: () => void;
 }
 
 export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
-  studentId,
+  studentId: propStudentId,
   initialRecord,
+  isOpen = true,
+  student,
   onClose,
 }) => {
-  const [record, setRecord] = useState<StudentRecord | null>(initialRecord || null);
+  const effectiveInitial = student || initialRecord || null;
+  const effectiveStudentId = propStudentId || effectiveInitial?.id || null;
+
+  const [record, setRecord] = useState<StudentRecord | null>(effectiveInitial);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showFullApaar, setShowFullApaar] = useState(false);
 
   useEffect(() => {
-    if (!studentId) {
-      setRecord(null);
-      setError(null);
+    if (effectiveInitial) {
+      setRecord(effectiveInitial);
+    }
+  }, [effectiveInitial]);
+
+  useEffect(() => {
+    if (!effectiveStudentId) {
+      if (!effectiveInitial) {
+        setRecord(null);
+        setError(null);
+      }
       return;
     }
 
@@ -51,7 +66,7 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
       setIsLoading(true);
       setError(null);
       try {
-        const fresh = await api.getStudent(studentId);
+        const fresh = await api.getStudent(effectiveStudentId);
         if (isMounted) {
           setRecord(fresh);
         }
@@ -59,8 +74,8 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
         if (isMounted) {
           setError(err.message || 'Failed to load authoritative student record from backend ledger.');
           // Fall back to initialRecord if available
-          if (initialRecord) {
-            setRecord(initialRecord);
+          if (effectiveInitial) {
+            setRecord(effectiveInitial);
           }
         }
       } finally {
@@ -75,9 +90,9 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [studentId, initialRecord]);
+  }, [effectiveStudentId]);
 
-  if (!studentId) return null;
+  if (!isOpen || (!effectiveStudentId && !record)) return null;
 
   const maskApaar = (id: string) => {
     if (showFullApaar) return id;
@@ -213,6 +228,41 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                   </div>
                   <div className="font-mono-code font-bold text-xs text-[var(--color-text-primary)] mt-1">
                     {record.enrollment_number || '—'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Demographics: Category, Gender, DOB */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="p-3 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-card)]">
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">
+                    <Calendar className="w-3.5 h-3.5 text-[var(--color-brand-blue)]" />
+                    <span>Date of Birth</span>
+                  </div>
+                  <div className="font-semibold text-xs text-[var(--color-text-primary)] mt-1">
+                    {record.dob || '—'}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-card)]">
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">
+                    <Award className="w-3.5 h-3.5 text-[var(--color-brand-yellow)]" />
+                    <span>Social Category</span>
+                  </div>
+                  <div className="mt-1">
+                    <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--color-brand-yellow)]/10 text-[var(--color-brand-yellow)] border border-[var(--color-brand-yellow)]/25">
+                      {record.category || 'General'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-card)]">
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">
+                    <FileCheck className="w-3.5 h-3.5 text-[var(--color-brand-pink)]" />
+                    <span>Gender</span>
+                  </div>
+                  <div className="font-semibold text-xs text-[var(--color-text-primary)] mt-1">
+                    {record.gender || '—'}
                   </div>
                 </div>
               </div>

@@ -80,15 +80,15 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
     // Initial camera position
     camera.position.set(0, 0, fullScreen ? (initialW < 768 ? 9.8 : 7.8) : compact ? 8.5 : 7.8);
 
-    // Dynamic Fog matching current theme
+    // Dynamic Fog matching current theme (Pure Black in Dark Mode)
     const isDarkInitial = themeRef.current === 'dark';
-    const fogColor = isDarkInitial ? 0x050914 : 0xF5F8FC;
-    scene.fog = new THREE.FogExp2(fogColor, fullScreen ? 0.032 : 0.04);
+    const fogColor = isDarkInitial ? 0x000000 : 0xF5F5F5;
+    scene.fog = new THREE.FogExp2(fogColor, fullScreen ? 0.03 : 0.038);
 
     // Lighting Rig
     const ambientLight = new THREE.AmbientLight(
-      isDarkInitial ? 0x0A162C : 0xEAF0F8,
-      isDarkInitial ? 2.4 : 2.8
+      isDarkInitial ? 0x181818 : 0xEAF0F8,
+      isDarkInitial ? 2.5 : 2.8
     );
     scene.add(ambientLight);
 
@@ -100,8 +100,8 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
     scene.add(mainBlueLight);
 
     const rimCyanLight = new THREE.PointLight(
-      isDarkInitial ? 0x00E5FF : 0x2391FF,
-      isDarkInitial ? 3.0 : 2.0,
+      isDarkInitial ? 0x2391FF : 0x1A75D2,
+      isDarkInitial ? 2.5 : 2.0,
       25
     );
     rimCyanLight.position.set(-6, 3, 4);
@@ -130,12 +130,12 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return new THREE.CanvasTexture(canvas);
 
-      // Card Base Glass Gradient
+      // Card Base Glass Gradient - Pure black tones
       const grad = ctx.createLinearGradient(0, 0, 1024, 640);
       if (isDark) {
-        grad.addColorStop(0, 'rgba(8, 20, 48, 0.94)');
-        grad.addColorStop(0.5, 'rgba(12, 28, 64, 0.88)');
-        grad.addColorStop(1, 'rgba(5, 12, 30, 0.96)');
+        grad.addColorStop(0, 'rgba(12, 12, 12, 0.98)');
+        grad.addColorStop(0.5, 'rgba(16, 16, 16, 0.94)');
+        grad.addColorStop(1, 'rgba(5, 5, 5, 0.99)');
       } else {
         grad.addColorStop(0, 'rgba(255, 255, 255, 0.96)');
         grad.addColorStop(0.5, 'rgba(240, 246, 255, 0.92)');
@@ -540,26 +540,33 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
       connectionLines.push({ line: dataLine, tileIndex: idx });
     });
 
-    // 5. Floating Dust Particles
-    const particleCount = fullScreen ? 160 : 120;
+    // 5. Floating Dust Particles with continuous drift velocities
+    const particleCount = fullScreen ? 140 : 90;
     const pGeo = new THREE.BufferGeometry();
     const pPos = new Float32Array(particleCount * 3);
+    const pVel = new Float32Array(particleCount);
     for (let i = 0; i < particleCount; i++) {
-      pPos[i * 3] = (Math.random() - 0.5) * 14;
-      pPos[i * 3 + 1] = (Math.random() - 0.5) * 9;
-      pPos[i * 3 + 2] = (Math.random() - 0.5) * 6;
+      pPos[i * 3] = (Math.random() - 0.5) * 16;
+      pPos[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      pPos[i * 3 + 2] = (Math.random() - 0.5) * 7;
+      pVel[i] = 0.2 + Math.random() * 0.35; // gentle upward drift
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
     const pMat = new THREE.PointsMaterial({
       color: 0x2391FF,
-      size: 0.035,
+      size: 0.038,
       transparent: true,
-      opacity: isDarkInitial ? 0.6 : 0.45,
+      opacity: isDarkInitial ? 0.65 : 0.4,
     });
     const particles = new THREE.Points(pGeo, pMat);
     mainRig.add(particles);
 
-    // Initial Layout positioning based on viewport
+    // Dynamic base coordinate references for smooth viewport adaptation
+    let baseCardPosX = 0;
+    let baseCardPosY = 0;
+    let baseCamY = 0;
+
+    // Viewport layout positioning
     const updateLayout = () => {
       const { w, h } = getDimensions();
       camera.aspect = w / h;
@@ -568,32 +575,41 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
 
       if (fullScreen) {
         if (w >= 1024) {
-          // Desktop: Card floating elegantly right of center in open space
-          cardGroup.position.set(2.0, 0.0, 0);
+          // Desktop: Card floating right of center in open space
+          baseCardPosX = 2.0;
+          baseCardPosY = 0.0;
           cardGroup.scale.set(1.05, 1.05, 1.05);
           camera.position.set(0, 0, 7.8);
+          baseCamY = 0;
         } else if (w >= 768) {
-          // Tablet: Card centered-right, camera pushed out
-          cardGroup.position.set(1.0, -0.3, 0);
+          // Tablet: Card centered-right
+          baseCardPosX = 0.9;
+          baseCardPosY = -0.3;
           cardGroup.scale.set(0.95, 0.95, 0.95);
           camera.position.set(0, 0, 8.6);
+          baseCamY = 0;
         } else {
-          // Mobile: Positioned slightly lower, scaled to not crowd mobile hero text
-          cardGroup.position.set(0, -1.2, 0);
+          // Mobile: Positioned lower, scaled to not crowd mobile hero text
+          baseCardPosX = 0;
+          baseCardPosY = -1.2;
           cardGroup.scale.set(0.8, 0.8, 0.8);
           camera.position.set(0, 0, 9.8);
+          baseCamY = 0;
         }
       } else {
-        cardGroup.position.set(0, 0, 0);
+        baseCardPosX = 0;
+        baseCardPosY = 0;
         cardGroup.scale.set(1, 1, 1);
         camera.position.set(0, 0, compact ? 8.5 : 7.8);
+        baseCamY = 0;
       }
+      cardGroup.position.set(baseCardPosX, baseCardPosY, 0);
     };
 
     updateLayout();
     window.addEventListener('resize', updateLayout);
 
-    // Mouse Parallax (Window-level when in fullScreen, Container-level when isolated)
+    // Mouse Parallax
     let mouseX = 0;
     let mouseY = 0;
     let targetX = 0;
@@ -609,6 +625,15 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
 
     window.addEventListener('mousemove', handleMouseMove);
 
+    // Smooth scroll response
+    let scrollY = 0;
+    let targetScrollY = 0;
+    const handleScroll = () => {
+      if (prefersReducedMotion) return;
+      targetScrollY = window.scrollY || 0;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
     // Animation Loop
     let animationFrameId: number;
     const clock = new THREE.Clock();
@@ -617,6 +642,7 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.08);
       const time = clock.getElapsedTime();
 
       // Check if theme changed dynamically
@@ -627,24 +653,25 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
 
         // Update fog & lights
         if (scene.fog) {
-          (scene.fog as THREE.FogExp2).color.setHex(isDark ? 0x050914 : 0xF5F8FC);
+          (scene.fog as THREE.FogExp2).color.setHex(isDark ? 0x000000 : 0xF5F5F5);
         }
-        ambientLight.color.setHex(isDark ? 0x0A162C : 0xEAF0F8);
+        ambientLight.color.setHex(isDark ? 0x181818 : 0xEAF0F8);
         mainBlueLight.color.setHex(isDark ? 0x2391FF : 0x1A75D2);
-        rimCyanLight.color.setHex(isDark ? 0x00E5FF : 0x2391FF);
-        backSlabMat.color.setHex(isDark ? 0x050D1E : 0xDEE9F8);
-        backSlabMat.emissive.setHex(isDark ? 0x0A1838 : 0xC7D8F0);
+        rimCyanLight.color.setHex(isDark ? 0x2391FF : 0x1A75D2);
+        backSlabMat.color.setHex(isDark ? 0x0A0A0A : 0xDEE9F8);
+        backSlabMat.emissive.setHex(isDark ? 0x050505 : 0xC7D8F0);
         sealCylinder.material.color.setHex(isDark ? 0x0E2650 : 0x1E40AF);
-        pMat.opacity = isDark ? 0.6 : 0.4;
+        pMat.opacity = isDark ? 0.65 : 0.4;
 
-        // Force card texture re-render
         currentTextureMode = '';
       }
 
-      // Smooth mouse interpolation
+      // Smooth mouse and scroll interpolation
       if (!prefersReducedMotion) {
         targetX += (mouseX - targetX) * 0.05;
         targetY += (mouseY - targetY) * 0.05;
+        scrollY += (targetScrollY - scrollY) * 0.06;
+        camera.position.y = baseCamY - scrollY * 0.001;
       }
 
       // Base card tilt angles
@@ -652,16 +679,17 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
       const baseTiltX = fullScreen ? 0.12 : 0.08;
       const baseTiltZ = fullScreen ? -0.04 : 0;
 
-      // Primary Card subtle idle float & rotation
+      // 1. Primary Card Continuous Gentle Floating Movement
       if (!prefersReducedMotion) {
-        cardGroup.rotation.y = baseTiltY + Math.sin(time * 0.7) * 0.05 + targetX * 0.35;
-        cardGroup.rotation.x = baseTiltX + Math.cos(time * 0.6) * 0.04 - targetY * 0.3;
-        cardGroup.rotation.z = baseTiltZ + Math.sin(time * 0.5) * 0.02;
+        cardGroup.rotation.y = baseTiltY + Math.sin(time * 0.6) * 0.08 + targetX * 0.35;
+        cardGroup.rotation.x = baseTiltX + Math.cos(time * 0.5) * 0.06 - targetY * 0.25 - (scrollY * 0.0003);
+        cardGroup.rotation.z = baseTiltZ + Math.sin(time * 0.45) * 0.035;
 
-        const basePosY = cardGroup.position.y;
-        cardGroup.position.y = (fullScreen ? (window.innerWidth < 768 ? -1.2 : 0) : 0) + Math.sin(time * 1.1) * 0.08;
+        cardGroup.position.y = baseCardPosY + Math.sin(time * 0.85) * 0.22;
+        cardGroup.position.x = baseCardPosX + Math.cos(time * 0.65) * 0.08;
       } else {
         cardGroup.rotation.set(baseTiltX, baseTiltY, baseTiltZ);
+        cardGroup.position.set(baseCardPosX, baseCardPosY, 0);
       }
 
       const st = stateRef.current;
@@ -745,41 +773,50 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
         }
       }
 
-      // Verification Seal Pulsing & Spin
+      // 2. Verification Seal Slow Orbit and Spin
       if (!prefersReducedMotion) {
-        sealRing.rotation.z = time * 1.2;
-        sealCore.rotation.x = time * 1.6;
-        sealCore.rotation.y = time * 2.0;
-        const sealPulse = 0.4 + Math.sin(time * 3.5) * 0.2;
+        sealRing.rotation.z = time * 0.45;
+        sealCore.rotation.x = time * 0.7;
+        sealCore.rotation.y = time * 0.9;
+        const sealPulse = 0.4 + Math.sin(time * 2.8) * 0.25;
         sealCylinder.material.emissiveIntensity = 0.35 + sealPulse * 0.4;
       }
 
-      // Satellite Student-Record Tiles Floating & dynamic lines
+      // 3. Satellite Record Tiles Independent Rotation & 3D Depth Movement
       tiles.forEach((t, i) => {
         if (!prefersReducedMotion) {
-          t.group.position.x = t.initial.x + Math.sin(time * 0.7 + i) * 0.06;
-          t.group.position.y = t.initial.y + Math.cos(time * 0.9 + i) * 0.06;
-          t.group.position.z = t.initial.z + Math.sin(time * 0.6 + i * 2) * 0.04;
+          t.group.position.x = t.initial.x + Math.sin(time * 0.7 + i * 1.3) * 0.16;
+          t.group.position.y = t.initial.y + Math.cos(time * 0.85 + i * 1.1) * 0.18;
+          t.group.position.z = t.initial.z + Math.sin(time * 0.6 + i * 2.1) * 0.28;
 
-          t.group.rotation.y = targetX * 0.2;
-          t.group.rotation.x = -targetY * 0.2;
+          t.group.rotation.y = targetX * 0.25 + Math.sin(time * 0.55 + i) * 0.1;
+          t.group.rotation.x = -targetY * 0.22 + Math.cos(time * 0.5 + i) * 0.08;
+          t.group.rotation.z = Math.sin(time * 0.4 + i) * 0.05;
         }
 
-        // Keep connection line tethered to tile
+        // 4. Update dynamic connection lines tethered to card
         const conn = connectionLines[i];
         if (conn) {
           const positions = conn.line.geometry.attributes.position;
           if (positions) {
-            positions.setXYZ(0, cardGroup.position.x * 0.3, cardGroup.position.y * 0.3, 0);
+            positions.setXYZ(0, cardGroup.position.x * 0.4, cardGroup.position.y * 0.4, 0);
             positions.setXYZ(1, t.group.position.x, t.group.position.y, t.group.position.z);
             positions.needsUpdate = true;
           }
         }
       });
 
-      // Background dust slow drift
+      // 5. Small restrained particles continuous vertical drift
       if (!prefersReducedMotion) {
-        particles.rotation.y = time * 0.02;
+        const positions = pGeo.attributes.position.array as Float32Array;
+        for (let i = 0; i < particleCount; i++) {
+          positions[i * 3 + 1] += pVel[i] * delta * 0.9;
+          if (positions[i * 3 + 1] > 5.0) {
+            positions[i * 3 + 1] = -5.0;
+          }
+        }
+        pGeo.attributes.position.needsUpdate = true;
+        particles.rotation.y = time * 0.03;
       }
 
       renderer?.render(scene, camera);
@@ -791,6 +828,7 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', updateLayout);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('scroll', handleScroll);
 
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments || obj instanceof THREE.Points || obj instanceof THREE.Line) {

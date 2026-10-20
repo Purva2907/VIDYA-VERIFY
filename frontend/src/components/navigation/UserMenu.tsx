@@ -49,7 +49,7 @@ export const UserMenu: React.FC = () => {
   };
 
   const isAuditor = user.role === 'auditor';
-  const roleLabel = isAuditor ? 'AICTE Administrator' : 'Institution Verifier';
+  const roleLabel = isAuditor ? 'Platform Administrator' : 'Institution Administrator';
 
   return (
     <div className="relative" ref={menuRef}>
@@ -74,7 +74,7 @@ export const UserMenu: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] shadow-xl p-2 z-50 text-xs">
+        <div className="absolute right-0 mt-2 w-64 rounded-2xl app-dropdown p-2 z-50 text-xs">
           {/* User Header Summary */}
           <div className="p-3 border-b border-[var(--color-border-subtle)] mb-1">
             <p className="font-semibold text-sm text-[var(--color-text-primary)] truncate">
@@ -102,6 +102,17 @@ export const UserMenu: React.FC = () => {
             <User className="w-4 h-4 text-[var(--color-text-secondary)]" />
             <span>Profile &amp; Account</span>
           </Link>
+
+          {user.institute_id && (
+            <Link
+              to={`/institutions/${encodeURIComponent(user.institute_id)}`}
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-brand-blue)] transition-colors"
+            >
+              <Building className="w-4 h-4 text-[var(--color-text-secondary)]" />
+              <span>Institution Details</span>
+            </Link>
+          )}
 
           <button
             type="button"

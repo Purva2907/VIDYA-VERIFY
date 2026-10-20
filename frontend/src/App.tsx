@@ -11,6 +11,9 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { VerifyPage } from './pages/VerifyPage';
 import { ImportPage } from './pages/ImportPage';
+import { InstitutionsPage } from './pages/InstitutionsPage';
+import { InstitutionDetailPage } from './pages/InstitutionDetailPage';
+import { StudentsPage } from './pages/StudentsPage';
 
 export function App() {
   return (
@@ -30,6 +33,30 @@ export function App() {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/institutions"
+              element={
+                <ProtectedRoute>
+                  <InstitutionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/institutions/:code"
+              element={
+                <ProtectedRoute>
+                  <InstitutionDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students"
+              element={
+                <ProtectedRoute>
+                  <StudentsPage />
                 </ProtectedRoute>
               }
             />

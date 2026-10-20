@@ -51,6 +51,17 @@ class SandboxAPAARAdapter(BaseAPAARAdapter):
             "intake_current": 124,
             "intake_cap": 120,
         },
+        "7721-1849-3382-IN": {
+            "name": "Rohan M. Nair",
+            "institute_code": "IND-AICTE-4891",
+            "institute_name": "Southern Institute of Engineering, Bangalore",
+            "programme": "B.Tech Electronics & Communication",
+            "admission_year": "2024-2028",
+            "status": "warning",
+            "has_collision": False,
+            "intake_current": 124,
+            "intake_cap": 120,
+        },
     }
 
     @staticmethod
