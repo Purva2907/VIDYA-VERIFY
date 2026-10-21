@@ -160,7 +160,7 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                 Student Record Details
               </h2>
               <p className="text-[11px] text-[var(--color-text-secondary)]">
-                Authoritative Record &bull; ID: <span className="font-mono-code font-bold">{studentId}</span>
+                Authoritative Record &bull; ID: <span className="font-mono-code font-bold">{effectiveStudentId || record?.id || '—'}</span>
               </p>
             </div>
           </div>
@@ -224,7 +224,7 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                 <div className="p-3.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-card)]">
                   <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">
                     <Hash className="w-3.5 h-3.5 text-[var(--color-brand-yellow)]" />
-                    <span>Enrollment / Roll No</span>
+                    <span>Enrolment / Roll No.</span>
                   </div>
                   <div className="font-mono-code font-bold text-xs text-[var(--color-text-primary)] mt-1">
                     {record.enrollment_number || '—'}
@@ -301,7 +301,7 @@ export const StudentDetailsModal: React.FC<StudentDetailsModalProps> = ({
                 <div className="p-3.5 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)]">
                   <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-text-secondary)] uppercase font-semibold">
                     <Building2 className="w-3.5 h-3.5" />
-                    <span>Institution / Campus</span>
+                    <span>Institution / Code</span>
                   </div>
                   <span className="font-semibold text-[var(--color-text-primary)] block mt-1">
                     {record.institution_name || record.institute_name || '—'}

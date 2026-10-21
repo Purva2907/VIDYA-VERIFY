@@ -207,7 +207,7 @@ export const AddInstitutionModal: React.FC<Props> = ({ isOpen, onClose, onInstit
 
           <div>
             <label className="block font-semibold text-[var(--color-text-secondary)] mb-1">
-              Campus Address (Optional)
+              Institution Address (Optional)
             </label>
             <input
               type="text"
@@ -256,7 +256,7 @@ export const AddInstitutionModal: React.FC<Props> = ({ isOpen, onClose, onInstit
                   Intake Configuration
                 </h3>
                 <p className="text-[10px] text-[var(--color-text-muted)]">
-                  Session-specific institution sanctioned student ceiling
+                  Session-specific sanctioned intake limit for the institution
                 </p>
               </div>
             </div>

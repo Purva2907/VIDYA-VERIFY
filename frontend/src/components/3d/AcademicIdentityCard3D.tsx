@@ -238,7 +238,7 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
 
       ctx.font = '13px "JetBrains Mono", monospace';
       ctx.fillStyle = textSecondary;
-      ctx.fillText('AFFILIATED INSTITUTION & CAMPUS CODE', 275, 240);
+      ctx.fillText('AFFILIATED INSTITUTION & CODE', 275, 240);
 
       ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
       ctx.fillStyle = textBlue;
@@ -254,12 +254,12 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
 
       ctx.font = '13px "JetBrains Mono", monospace';
       ctx.fillStyle = textSecondary;
-      ctx.fillText('APPROVED SEAT QUOTA STATUS', 275, 385);
+      ctx.fillText('SANCTIONED INTAKE STATUS', 275, 385);
 
       ctx.font = 'bold 15px "JetBrains Mono", monospace';
       ctx.fillStyle = statusOverride?.color || '#FFCD54';
       ctx.fillText(
-        statusOverride?.sub || 'REGULATORY CAP: 120/120 [SANCTIONED QUOTA VERIFIED]',
+        statusOverride?.sub || 'SANCTIONED INTAKE: 120/120 [QUOTA COMPLIANT]',
         275,
         410
       );
@@ -293,7 +293,7 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
       ctx.fillStyle = isDark ? 'rgba(35, 145, 255, 0.9)' : '#1D4ED8';
       ctx.fillText('VERIFICATION RECEIPT: 0x8F72B4...C09A11 · MERKLE ROOT: 0x99238E10...B28830', 60, 560);
       ctx.fillStyle = isDark ? 'rgba(166, 180, 204, 0.85)' : '#475569';
-      ctx.fillText('INTEGRITY STATUS: 0 MULTI-ENROLMENT COLLISIONS · SANDBOX MATCH VERIFIED', 60, 586);
+      ctx.fillText('INTEGRITY STATUS: 0 CROSS-INSTITUTION COLLISIONS · SANDBOX MATCH VERIFIED', 60, 586);
 
       const tex = new THREE.CanvasTexture(canvas);
       tex.needsUpdate = true;
@@ -420,7 +420,7 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
       },
       {
         title: 'AICTE PERMANENT ID',
-        status: 'CAMPUS VERIFIED: IND-1042',
+        status: 'INSTITUTION VERIFIED: IND-1042',
         color: 0x2391FF,
         x: 3.5,
         y: 1.6,
@@ -428,7 +428,7 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
       },
       {
         title: 'CONCURRENT COLLISION CHECK',
-        status: 'ZERO DUAL-ENROLMENT FOUND',
+        status: 'ZERO DUAL-ENROLMENTS FOUND',
         color: 0xF70063, // Vibrant Pink brand color
         x: 3.7,
         y: -0.8,
@@ -720,7 +720,7 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
           frontMat.map = createCardTexture({
             title: 'ALERT: COLLISION DETECTED',
             color: '#F70063',
-            sub: 'DUPLICATE ENROLMENT FLAGGED: MULTI-CAMPUS CONFLICT',
+            sub: 'DUPLICATE ENROLMENT FLAGGED: CROSS-INSTITUTION COLLISION',
           });
           frontMat.needsUpdate = true;
         }
@@ -732,9 +732,9 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
         if (currentTextureMode !== 'intake_warning') {
           currentTextureMode = 'intake_warning';
           frontMat.map = createCardTexture({
-            title: 'WARNING: INTAKE EXCEEDED',
+            title: 'INTAKE CAPACITY ALERT',
             color: '#FFCD54',
-            sub: 'REGULATORY CAP EXCEEDED: 122/120 SEATS',
+            sub: 'SANCTIONED INTAKE EXCEEDED: 122/120 STUDENTS',
           });
           frontMat.needsUpdate = true;
         }
@@ -748,7 +748,7 @@ export const AcademicIdentityCard3D: React.FC<Props> = ({
           frontMat.map = createCardTexture({
             title: 'CRYPTOGRAPHICALLY VALID',
             color: '#FFF83F',
-            sub: 'AICTE VERIFIED · ZERO DUPLICATE RECORD FOUND',
+            sub: 'AICTE VERIFIED · ZERO DUPLICATE RECORDS FOUND',
           });
           frontMat.needsUpdate = true;
         }

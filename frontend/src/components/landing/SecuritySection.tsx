@@ -33,7 +33,7 @@ export const SecuritySection: React.FC = () => {
     {
       title: 'Session & Intake Validation',
       description:
-        'Student enrolment session records are validated against sanctioned seat quotas, preventing retroactive seat inflation.',
+        'Student enrolment session records are validated against sanctioned intake quotas, preventing retroactive seat inflation.',
       icon: <FileCheck className="w-5 h-5 text-[#2391FF]" />,
       accentColor: '#2391FF',
       status: 'VERIFIED',
@@ -47,7 +47,7 @@ export const SecuritySection: React.FC = () => {
       status: 'SHIELDED',
     },
     {
-      title: 'Verifiable Receipts',
+      title: 'Cryptographic Verification Receipts',
       description:
         'Each verified record generates a unique cryptographic digest receipt for reference by institutions and regulatory auditors.',
       icon: <ShieldCheck className="w-5 h-5 text-[#FFCD54]" />,

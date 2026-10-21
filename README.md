@@ -43,9 +43,9 @@
 **VIDYA-VERIFY** is a full-stack, enterprise-grade academic verification platform developed explicitly for **AICTE Problem Statement 26263** under the Regulation Bureau.
 
 Built atop India's **Automated Permanent Academic Account Registry (APAAR)** framework (*"One Nation, One Student ID"*), the platform resolves three systemic vulnerabilities in technical education:
-1. **Concurrent Dual-Enrolment Fraud:** Detection of students registered simultaneously in two separate universities or campuses without regulatory sanction.
-2. **Sanctioned Intake Quota Inflation:** Real-time quota enforcement preventing colleges from admitting students beyond AICTE-approved batch caps.
-3. **Counterfeit Credentials:** Instant cryptographic ECDSA and Merkle-tree verification receipts with tamper-evident QR verification.
+1. **Concurrent Dual-Enrolment Fraud:** Detection of students registered simultaneously in two separate institutions without regulatory sanction (Cross-Institution Collision).
+2. **Sanctioned Intake Quota Inflation:** Real-time quota enforcement preventing institutions from admitting students beyond AICTE-approved sanctioned intake capacities.
+3. **Counterfeit Credentials:** Instant Cryptographic Signature Verification receipts (ECDSA and Merkle tree) with tamper-evident QR verification.
 
 ---
 
@@ -72,8 +72,8 @@ Unlike generic templates that display 3D globes or floating spheres, **VIDYA-VER
 - **3D Verification Seal:** Dimensional cylinder with outer torus ring and rotating inner wireframe octahedron in `#FFF83F`.
 - **4 Telemetry Visual States:**
   - 🔵 **Electric Blue (`#2391FF`)**: Clean verification state.
-  - 🔴 **Vibrant Pink (`#F70063`)**: Multi-campus collision alert (pulsing collision vector line).
-  - 🟡 **Amber Gold (`#FFCD54`)**: Sanctioned intake quota exceeded warning (124/120).
+  - 🔴 **Vibrant Pink (`#F70063`)**: Cross-institution duplicate collision alert (pulsing collision vector line).
+  - 🟡 **Amber Gold (`#FFCD54`)**: Sanctioned intake quota exceeded alert (122/120 students).
   - 🌟 **Electric Yellow (`#FFF83F`)**: Cryptographically certified ledger proof.
 
 ---
@@ -86,8 +86,8 @@ VIDYA-VERIFY enforces exact, harmonized color tokens across every component:
 | :--- | :--- | :--- |
 | **Electric Blue** | `#2391FF` | Primary actions, verified badges, active nav, laser scan |
 | **Electric Yellow** | `#FFF83F` | Selective highlights, rotating seal core, 2FA indicators |
-| **Amber Gold** | `#FFCD54` | Quota warnings, admission discrepancies, cap alerts |
-| **Vibrant Pink** | `#F70063` | Critical alerts, duplicate multi-campus collision vectors |
+| **Amber Gold** | `#FFCD54` | Intake capacity alerts, admission discrepancies, cap alerts |
+| **Vibrant Pink** | `#F70063` | Critical alerts, duplicate cross-institution collision vectors |
 | **Main Background**| `#050914` | Atmospheric deep navy foundation |
 | **Elevated Glass** | `rgba(16,27,50,0.75)` | Frosted glass cards with `backdrop-filter: blur(20px)` |
 
@@ -113,7 +113,7 @@ VIDYA-VERIFY enforces exact, harmonized color tokens across every component:
 
 ---
 
-### 4. Real-time Multi-Campus Duplicate Collision Alert
+### 4. Real-time Cross-Institution Duplicate Collision Alert
 ![Duplicate Alert Spotlight](assets/duplicate_alert.png)
 *Critical conflict banner highlighting concurrent dual-enrolment between Delhi Tech Campus and Mumbai Tech University.*
 
@@ -137,9 +137,9 @@ graph LR
 
 1. **Institution Upload (`/import`):** Encrypted manifest upload with automatic field normalization.
 2. **APAAR Validation:** 12-digit format parsing, checksum verification, and synthetic identity reconciliation.
-3. **Integrity Analysis:** Simultaneous cross-indexing across all registered universities; seat intake counting.
-4. **Central Repository:** Generation of deterministic Merkle root hashes and digital cryptographic signatures.
-5. **Authorized Verification (`/verify`):** Instant verification by employers, institutions, and regulatory auditors via signed QR codes.
+3. **Integrity Analysis:** Simultaneous cross-indexing across all registered institutions; sanctioned intake compliance.
+4. **Central Repository:** Generation of deterministic Merkle root hashes and Cryptographic Signature Verification receipts.
+5. **Authorized Verification (`/verify`):** Instant verification by employers, institutions, and regulatory auditors via signed QR receipts.
 
 ---
 

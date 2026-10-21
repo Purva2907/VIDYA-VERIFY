@@ -347,7 +347,7 @@ export const ImportPage: React.FC = () => {
                   <span>3. Concurrent Collision Check</span>
                 </div>
                 <p className="text-[11px] text-[var(--color-text-secondary)]">
-                  Detects if an APAAR identifier is already actively enrolled in another campus for the same academic session in the national ledger.
+                  Detects if an APAAR identifier is already actively enrolled in another institution for the same academic session in the national ledger.
                 </p>
               </div>
             </div>
@@ -362,7 +362,7 @@ export const ImportPage: React.FC = () => {
               {step === 'upload' ? 'Analyzing Manifest & Mapping Institutions...' : 'Committing Batch to AICTE Ledger...'}
             </h3>
             <p className="text-xs text-[var(--color-text-secondary)]">
-              Validating APAAR checksums, inspecting campus quotas, and evaluating cryptographic hashes...
+              Validating APAAR checksums, inspecting institution quotas, and evaluating cryptographic hashes...
             </p>
           </div>
         )}
@@ -734,7 +734,7 @@ export const ImportPage: React.FC = () => {
               </div>
               <div className="app-card p-4">
                 <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] block">
-                  Quota Warnings
+                  Intake Capacity Alerts
                 </span>
                 <span className="text-2xl font-bold font-mono-code text-[var(--color-brand-amber)]">
                   {batchResult.intake_warnings}
@@ -802,7 +802,7 @@ export const ImportPage: React.FC = () => {
                     <tr>
                       <th className="py-3 px-4">Student &amp; Email</th>
                       <th className="py-3 px-4">APAAR &amp; Enrolment</th>
-                      <th className="py-3 px-4">Institution / Campus</th>
+                      <th className="py-3 px-4">Institution / Code</th>
                       <th className="py-3 px-4">Course &amp; Session</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4">Verification Audit</th>
@@ -856,7 +856,7 @@ export const ImportPage: React.FC = () => {
                           )}
                           {r.integrity_status === 'warning' && (
                             <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FFCD54]/15 text-[#FFCD54] border border-[#FFCD54]/30">
-                              Quota Warning
+                              Intake Capacity Alert
                             </span>
                           )}
                           {r.integrity_status === 'pending' && (

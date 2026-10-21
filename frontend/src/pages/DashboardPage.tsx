@@ -206,7 +206,7 @@ export const DashboardPage: React.FC = () => {
                   {isLoading ? '...' : (metrics?.total_institutions ?? institutions.length)}
                 </div>
                 <div className="mt-1 text-[11px] text-[var(--color-text-secondary)] flex items-center justify-between">
-                  <span>AICTE Approved Campuses</span>
+                  <span>AICTE-Approved Institutions</span>
                   <ArrowRight className="w-3.5 h-3.5 text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-blue)] group-hover:translate-x-0.5 transition-all" />
                 </div>
               </Link>
@@ -244,7 +244,7 @@ export const DashboardPage: React.FC = () => {
                   {isLoading ? '...' : (metrics?.pending_count ?? 0)}
                 </div>
                 <div className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
-                  Awaiting campus nodal sign-off
+                  Awaiting institution nodal sign-off
                 </div>
               </div>
 
@@ -262,7 +262,7 @@ export const DashboardPage: React.FC = () => {
                   {isLoading ? '...' : (metrics?.attention_count ?? 0)}
                 </div>
                 <div className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
-                  {metrics?.duplicate_count || 0} duplicate, {metrics?.warning_count || 0} quota alert
+                  {metrics?.duplicate_count || 0} {(metrics?.duplicate_count ?? 0) === 1 ? 'duplicate' : 'duplicates'}, {metrics?.warning_count || 0} {(metrics?.warning_count ?? 0) === 1 ? 'quota alert' : 'quota alerts'}
                 </div>
               </div>
             </>
@@ -273,14 +273,14 @@ export const DashboardPage: React.FC = () => {
               <div className="app-card p-5">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
-                    Assigned Campus
+                    Assigned Institution
                   </span>
                   <div className="w-8 h-8 rounded-lg bg-[var(--color-brand-blue)]/10 flex items-center justify-center">
                     <Building2 className="w-4 h-4 text-[var(--color-brand-blue)]" />
                   </div>
                 </div>
                 <div className="font-bold text-base text-[var(--color-text-primary)] truncate">
-                  {metrics?.institution_name || user?.institute_name || 'My Campus'}
+                  {metrics?.institution_name || user?.institute_name || 'My Institution'}
                 </div>
                 <div className="mt-1 font-mono-code text-[11px] text-[var(--color-brand-blue)]">
                   {metrics?.institution_code || user?.institute_id || 'IND-AICTE-1042'}
@@ -291,7 +291,7 @@ export const DashboardPage: React.FC = () => {
               <Link to="/students" className="app-card p-5 group hover:border-[var(--color-brand-blue)] transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
-                    Campus Enrolments
+                    Enrolled Students
                   </span>
                   <div className="w-8 h-8 rounded-lg bg-[var(--color-brand-blue)]/10 flex items-center justify-center">
                     <Users className="w-4 h-4 text-[var(--color-brand-blue)]" />
@@ -444,12 +444,12 @@ export const DashboardPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-[#F70063]">
-                    CRITICAL COLLISION: CONCURRENT ENROLMENT IDENTIFIED
+                    CROSS-INSTITUTION COLLISION: DUPLICATE ENROLMENT IDENTIFIED
                   </span>
                   <span className="w-2 h-2 rounded-full bg-[#F70063] animate-pulse" />
                 </div>
                 <p className="text-xs text-[var(--color-text-primary)] mt-0.5">
-                  Candidate <span className="font-semibold">{metrics.duplicate_cases[0].student_name}</span> (APAAR <code className="px-1 py-0.5 rounded bg-[var(--color-bg-secondary)] font-mono-code">{maskApaar(metrics.duplicate_cases[0].apaar_id)}</code>) is concurrently enrolled across multiple technical campuses.
+                  Candidate <span className="font-semibold">{metrics.duplicate_cases[0].student_name}</span> (APAAR <code className="px-1 py-0.5 rounded bg-[var(--color-bg-secondary)] font-mono-code">{maskApaar(metrics.duplicate_cases[0].apaar_id)}</code>) is concurrently enrolled across multiple technical institutions.
                 </p>
                 <p className="text-[11px] text-[var(--color-text-muted)] font-mono-code mt-0.5">
                   {metrics.duplicate_cases[0].notes}
@@ -488,7 +488,7 @@ export const DashboardPage: React.FC = () => {
             {(!metrics?.institutions_needing_attention || metrics.institutions_needing_attention.length === 0) ? (
               <div className="py-8 text-center text-xs text-[var(--color-text-muted)] border border-dashed border-[var(--color-border-subtle)] rounded-xl">
                 <CheckCircle2 className="w-6 h-6 text-[#2391FF] mx-auto mb-1.5 opacity-80" />
-                <p>All institutional campuses operating within approved quotas and zero conflicts.</p>
+                <p>All institutions operating within sanctioned intake limits and zero duplicate collisions.</p>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -505,12 +505,12 @@ export const DashboardPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       {inst.duplicates > 0 && (
                         <span className="px-2 py-0.5 rounded-full bg-[#F70063]/15 text-[#F70063] font-semibold text-[10px]">
-                          {inst.duplicates} Collision
+                          {inst.duplicates} {inst.duplicates === 1 ? 'Collision' : 'Collisions'}
                         </span>
                       )}
                       {inst.warnings > 0 && (
                         <span className="px-2 py-0.5 rounded-full bg-[#FFCD54]/15 text-[#FFCD54] font-semibold text-[10px]">
-                          {inst.warnings} Quota Alert
+                          {inst.warnings} {inst.warnings === 1 ? 'Quota Alert' : 'Quota Alerts'}
                         </span>
                       )}
                     </div>
@@ -598,7 +598,7 @@ export const DashboardPage: React.FC = () => {
                 <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] font-semibold">
                   <th className="py-3 px-4">Student Name</th>
                   <th className="py-3 px-4">Masked APAAR ID</th>
-                  <th className="py-3 px-4">Campus / Code</th>
+                  <th className="py-3 px-4">Institution / Code</th>
                   <th className="py-3 px-4">Programme</th>
                   <th className="py-3 px-4">Integrity Status</th>
                   <th className="py-3 px-4 text-right">Details</th>
@@ -666,7 +666,7 @@ export const DashboardPage: React.FC = () => {
         <div className="mt-8 pt-4 border-t border-[var(--color-border-subtle)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[var(--color-brand-blue)]" />
-            <span>AICTE Platform Statement 26263 · Institutional Ledger Operational</span>
+            <span>AICTE Problem Statement 26263 · Institutional Ledger Operational</span>
           </div>
 
           <div className="flex items-center gap-2">

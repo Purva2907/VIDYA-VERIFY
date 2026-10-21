@@ -85,7 +85,7 @@ export const EditProgrammeModal: React.FC<EditProgrammeModalProps> = ({
               <BookOpen className="w-5 h-5 text-[var(--color-brand-blue)]" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[var(--color-text-primary)]">Manage Programme & Intake Cap</h2>
+              <h2 className="text-base font-bold text-[var(--color-text-primary)]">Manage Programme & Sanctioned Intake</h2>
               <p className="text-xs text-[var(--color-text-secondary)]">
                 Institution: <span className="font-mono-code text-[var(--color-brand-blue)]">{institutionCode}</span>
               </p>
@@ -125,7 +125,7 @@ export const EditProgrammeModal: React.FC<EditProgrammeModalProps> = ({
             {isExceeded && (
               <div className="mt-1 p-2 rounded-lg bg-[#F70063]/10 border border-[#F70063]/30 text-[#F70063] flex items-center gap-1.5 text-[11px]">
                 <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                <span>Enrolment exceeds newly proposed cap. An intake capacity warning will be registered during audit.</span>
+                <span>Enrolment exceeds newly proposed cap. An intake capacity alert will be registered during audit.</span>
               </div>
             )}
           </div>

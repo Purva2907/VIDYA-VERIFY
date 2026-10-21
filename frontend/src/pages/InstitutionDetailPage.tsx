@@ -398,7 +398,7 @@ export const InstitutionDetailPage: React.FC = () => {
               </h3>
               <div className="space-y-2.5">
                 <div>
-                  <span className="text-[var(--color-text-muted)] block">Official Campus Code</span>
+                  <span className="text-[var(--color-text-muted)] block">Official Institution Code</span>
                   <span className="font-mono-code font-bold text-sm text-[var(--color-brand-blue)]">
                     {institution.code}
                   </span>
@@ -569,7 +569,7 @@ export const InstitutionDetailPage: React.FC = () => {
             {filteredStudents.length === 0 ? (
               <div className="py-16 text-center app-card p-6 border-dashed border-[var(--color-border-subtle)]">
                 <Users className="w-8 h-8 text-[var(--color-text-muted)] mx-auto mb-2" />
-                <p className="text-xs text-[var(--color-text-secondary)]">No student records enrolled under this campus.</p>
+                <p className="text-xs text-[var(--color-text-secondary)]">No student records enrolled under this institution.</p>
                 <Link
                   to="/import"
                   className="mt-3 px-3.5 py-1.5 text-xs rounded-xl bg-[var(--color-brand-blue)] text-white inline-flex items-center gap-1.5"
@@ -662,7 +662,7 @@ export const InstitutionDetailPage: React.FC = () => {
                     <span>Institution Sanctioned Intake Capacity</span>
                   </h3>
                   <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
-                    Session <span className="font-mono-code font-bold text-[var(--color-text-primary)]">{institution.academic_session || '2024-2028'}</span> campus-level admission quota
+                    Session <span className="font-mono-code font-bold text-[var(--color-text-primary)]">{institution.academic_session || '2024-2028'}</span> institution-level admission quota
                   </p>
                 </div>
                 {canManageProgrammes && (
@@ -718,7 +718,7 @@ export const InstitutionDetailPage: React.FC = () => {
               {/* Progress bar of institution utilization */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-[var(--color-text-secondary)]">Campus Seat Utilization</span>
+                  <span className="text-[var(--color-text-secondary)]">Institution Intake Utilization</span>
                   <span className={`font-mono-code font-bold ${
                     institution.capacity_utilization_pct > 100
                       ? 'text-[#F70063]'
@@ -760,7 +760,7 @@ export const InstitutionDetailPage: React.FC = () => {
                 <span>Programme Quota Monitoring</span>
               </h3>
               <p className="text-xs text-[var(--color-text-secondary)] mb-4">
-                Regulatory compliance requires institutions to strictly admit candidates within sanctioned program quotas.
+                Regulatory compliance requires institutions to strictly admit candidates within sanctioned programme quotas.
               </p>
 
               <div className="space-y-4">

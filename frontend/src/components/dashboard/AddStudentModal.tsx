@@ -224,7 +224,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
                 Register Student Record
               </h2>
               <p className="text-[11px] text-[var(--color-text-secondary)]">
-                Enroll student candidate under institution and programme ledger
+                Enrol student candidate under institution and programme ledger
               </p>
             </div>
           </div>
@@ -250,7 +250,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
           <div className="p-3.5 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] space-y-3">
             <div className="flex items-center gap-2 font-semibold text-[var(--color-text-primary)] text-xs">
               <Building2 className="w-3.5 h-3.5 text-[var(--color-brand-blue)]" />
-              <span>Enrolling Campus & Programme Scoping</span>
+              <span>Enrolling Institution & Programme Scoping</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -368,7 +368,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className="block font-semibold text-[var(--color-text-secondary)] mb-1">
-                Enrollment / Roll Number
+                Enrolment / Roll Number
               </label>
               <input
                 type="text"

@@ -667,18 +667,30 @@ export const api = {
 
   async reviewFinding(
     id: string,
-    decision: string,
+    decisionOrPayload: string | { decision?: string; status?: string; notes?: string; new_status?: string },
     notes?: string,
     newStatus: string = 'RESOLVED_CLEARED'
   ): Promise<IntegrityFinding> {
+    let bodyPayload: { decision: string; notes?: string; new_status?: string };
+
+    if (typeof decisionOrPayload === 'object' && decisionOrPayload !== null) {
+      bodyPayload = {
+        decision: decisionOrPayload.decision || decisionOrPayload.status || 'REVIEW_DETERMINATION',
+        notes: decisionOrPayload.notes,
+        new_status: decisionOrPayload.new_status || decisionOrPayload.status || newStatus,
+      };
+    } else {
+      bodyPayload = {
+        decision: decisionOrPayload,
+        notes,
+        new_status: newStatus,
+      };
+    }
+
     const res = await fetch(`${API_BASE}/api/findings/${encodeURIComponent(id)}/review`, {
       method: 'POST',
       headers: getAuthHeader(),
-      body: JSON.stringify({
-        decision,
-        notes,
-        new_status: newStatus,
-      }),
+      body: JSON.stringify(bodyPayload),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

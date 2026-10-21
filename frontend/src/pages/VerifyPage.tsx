@@ -141,7 +141,7 @@ export const VerifyPage: React.FC = () => {
             Academic Record Verification
           </h1>
           <p className="text-xs sm:text-sm text-[#8E9CAE] mt-2 leading-relaxed font-normal">
-            Query student APAAR identifiers to review enrolment status, multi-campus collision status, and sanctioned intake compliance.
+            Query student APAAR identifiers to review enrolment status, cross-institution collision status, and sanctioned intake compliance.
           </p>
         </div>
 
@@ -193,7 +193,7 @@ export const VerifyPage: React.FC = () => {
                         Academic Ledger Lookup
                       </h3>
                       <p className="text-[11px] text-[#8E9CAE] mt-0.5 leading-normal">
-                        Fetches record from participating institution's verified data.
+                        Fetches record from participating institutions' verified data.
                       </p>
                     </div>
                   </div>
@@ -208,7 +208,7 @@ export const VerifyPage: React.FC = () => {
                         Cross-Institution Check
                       </h3>
                       <p className="text-[11px] text-[#8E9CAE] mt-0.5 leading-normal">
-                        Detects duplicate or concurrent enrolments across campuses.
+                        Detects duplicate or concurrent enrolments across institutions.
                       </p>
                     </div>
                   </div>
@@ -282,12 +282,12 @@ export const VerifyPage: React.FC = () => {
                 </span>
               </div>
 
-              {/* Card 2: Cross-Campus Detection (Pink) */}
+              {/* Card 2: Cross-Institution Collision Detection (Pink) */}
               <div className="rounded-xl p-3.5 bg-[#15050c]/90 border border-[#4d132b] relative flex items-start gap-3 shadow-md">
                 <Share2 className="w-8 h-8 text-[#F70063] shrink-0 mt-0.5" />
                 <div className="pr-6">
                   <h3 className="font-bold text-xs text-white leading-tight">
-                    Cross-Campus Detection
+                    Cross-Institution Collision Detection
                   </h3>
                   <p className="text-[10px] text-[#8E9CAE] mt-0.5 leading-snug">
                     Finds potential duplicate enrolments across institutions
@@ -463,7 +463,7 @@ export const VerifyPage: React.FC = () => {
                               ? 'Academic Integrity Verified'
                               : result.has_duplicate_collision
                               ? 'Duplicate Enrolment Flagged'
-                              : 'Intake Capacity Warning'}
+                              : 'Intake Capacity Alert'}
                           </h3>
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono-code ${
@@ -568,7 +568,7 @@ export const VerifyPage: React.FC = () => {
                       <div className="p-2.5 rounded-xl border border-[#182633] bg-[#070a0e]">
                         <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[#8E9CAE] uppercase">
                           <Hash className="w-3.5 h-3.5 text-[#2391FF]" />
-                          <span>Enrollment No</span>
+                          <span>Enrolment No.</span>
                         </div>
                         <div className="font-mono-code font-bold text-xs text-white mt-1 truncate">
                           {result.enrollment_number || '—'}
@@ -818,8 +818,8 @@ export const VerifyPage: React.FC = () => {
                 {/* Quota Alert */}
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#FFCD54] shrink-0" />
-                  <span className="font-semibold text-xs text-white w-20 shrink-0">
-                    Quota Alert
+                  <span className="font-semibold text-xs text-white shrink-0">
+                    Intake Capacity Alert
                   </span>
                   <span className="text-[11px] text-[#8E9CAE]">
                     Exceeds sanctioned intake capacity

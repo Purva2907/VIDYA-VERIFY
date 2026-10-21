@@ -113,7 +113,7 @@ export const StudentsPage: React.FC = () => {
                 <span>STUDENT RECORDS LEDGER</span>
               </span>
               <span className="text-xs text-[var(--color-text-secondary)]">
-                {isAuditor ? 'National Multi-Campus Database' : user?.institute_name || 'Campus Scoped Records'}
+                {isAuditor ? 'National Multi-Institution Database' : user?.institute_name || 'Institution-Scoped Records'}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Student Records</h1>
@@ -159,7 +159,7 @@ export const StudentsPage: React.FC = () => {
             {/* Institution Filter (visible to Platform Admins) */}
             {isAuditor && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[var(--color-text-secondary)] font-medium">Campus:</span>
+                <span className="text-[var(--color-text-secondary)] font-medium">Institution:</span>
                 <select
                   value={selectedInstFilter}
                   onChange={(e) => setSelectedInstFilter(e.target.value)}
@@ -234,7 +234,7 @@ export const StudentsPage: React.FC = () => {
                     <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] font-semibold">
                       <th className="py-3 px-4">Student &amp; Email</th>
                       <th className="py-3 px-4">Masked APAAR ID</th>
-                      <th className="py-3 px-4">Institution / Campus</th>
+                      <th className="py-3 px-4">Institution / Code</th>
                       <th className="py-3 px-4">Programme &amp; Session</th>
                       <th className="py-3 px-4">Integrity Status</th>
                       <th className="py-3 px-4 text-right">Actions</th>
@@ -286,7 +286,7 @@ export const StudentsPage: React.FC = () => {
                           {s.integrity_status === 'warning' && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FFCD54]/15 text-[#FFCD54] border border-[#FFCD54]/30">
                               <AlertTriangle className="w-3 h-3" />
-                              <span>Quota Alert</span>
+                              <span>Intake Capacity Alert</span>
                             </span>
                           )}
                           {s.integrity_status === 'pending' && (

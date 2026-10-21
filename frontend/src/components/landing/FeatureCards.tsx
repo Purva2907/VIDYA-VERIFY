@@ -40,7 +40,7 @@ export const FeatureCards: React.FC = () => {
       id: 'duplicate-detection',
       title: 'Cross-Institution Duplicate Detection',
       description:
-        'Cross-enrolment indexing preventing simultaneous dual-enrolments across separate AICTE approved universities and campuses.',
+        'Cross-enrolment indexing preventing simultaneous dual-enrolments across separate AICTE-approved institutions.',
       icon: <CopyX className="w-5 h-5 text-[#F70063]" />,
       accentBorder: 'hover:border-[#F70063]/60 hover:shadow-[0_8px_30px_rgba(247,0,99,0.15)]',
       badge: 'COLLISION SHIELD',
@@ -49,13 +49,13 @@ export const FeatureCards: React.FC = () => {
     },
     {
       id: 'intake-monitoring',
-      title: 'Approved Intake Monitoring',
+      title: 'Sanctioned Intake Monitoring',
       description:
-        'Comparison of registered students against sanctioned AICTE intake quotas, immediately highlighting unauthorized admissions.',
+        'Comparison of enrolled students against sanctioned AICTE intake quotas, immediately highlighting unauthorized admissions.',
       icon: <Gauge className="w-5 h-5 text-[#FFCD54]" />,
       accentBorder: 'hover:border-[#FFCD54]/60 hover:shadow-[0_8px_30px_rgba(255,205,84,0.15)]',
       badge: 'REGULATORY CAP',
-      metric: 'Sanctioned Seat Compliance',
+      metric: 'Sanctioned Intake Compliance',
       accentColor: '#FFCD54',
     },
     {
@@ -71,7 +71,7 @@ export const FeatureCards: React.FC = () => {
     },
     {
       id: 'tamper-evident-credentials',
-      title: 'Verifiable Verification Receipts',
+      title: 'Cryptographic Verification Receipts',
       description:
         'Instant verification receipts with cryptographic digest hashes, providing provable confirmation of authenticity.',
       icon: <QrCode className="w-5 h-5 text-[#FFF83F]" />,
@@ -84,11 +84,11 @@ export const FeatureCards: React.FC = () => {
       id: 'regulatory-telemetry',
       title: 'Institutional Administration',
       description:
-        'Real-time enrollment summaries and statistics for AICTE regulation bureaus and institutional nodals.',
+        'Real-time enrolment summaries and statistics for AICTE regulation bureaus and institutional nodals.',
       icon: <LineChart className="w-5 h-5 text-[#2391FF]" />,
       accentBorder: 'hover:border-[#2391FF]/60 hover:shadow-[0_8px_30px_rgba(35,145,255,0.15)]',
       badge: 'REGULATION LEDGER',
-      metric: 'Active Campus Insights',
+      metric: 'Active Institution Insights',
       accentColor: '#2391FF',
     },
   ];
