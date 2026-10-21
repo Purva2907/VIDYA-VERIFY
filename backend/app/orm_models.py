@@ -160,3 +160,23 @@ class BatchImportLogORM(Base):
     merkle_batch_hash = Column(String(128), nullable=True)
     rejected_details = Column(Text, nullable=True, default="[]")  # JSON string
     created_at = Column(String(32), nullable=False)
+
+
+class VerificationHistoryORM(Base):
+    __tablename__ = "verification_history"
+
+    id = Column(String(64), primary_key=True)
+    apaar_id = Column(String(64), nullable=False)
+    apaar_id_masked = Column(String(64), nullable=False)
+    status = Column(String(32), index=True, nullable=False)  # CLEAN, COLLISION, QUOTA ALERT, NOT FOUND, ERROR
+    source_type = Column(String(64), nullable=False)  # DATABASE_PERSISTED_LEDGER, SANDBOX_SYNTHETIC, NOT_FOUND
+    is_sandbox = Column(Integer, nullable=False, default=0)  # 0=false, 1=true (boolean compat for SQLite)
+    institution_code = Column(String(64), nullable=True, index=True)
+    institution_name = Column(String(255), nullable=True)
+    programme = Column(String(255), nullable=True)
+    actor_email = Column(String(255), nullable=True)
+    actor_role = Column(String(64), nullable=True)
+    actor_institution = Column(String(64), nullable=True, index=True)
+    session_id = Column(String(64), nullable=True, index=True)
+    timestamp = Column(String(32), index=True, nullable=False)
+

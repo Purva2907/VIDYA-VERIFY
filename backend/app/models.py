@@ -455,3 +455,24 @@ class AuditEventSchema(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
 
 
+class VerificationHistoryItem(BaseModel):
+    id: str
+    apaar_masked: str
+    apaar_raw: str
+    status: str  # "CLEAN", "COLLISION", "QUOTA ALERT", "NOT FOUND"
+    timestamp: str
+    institution_code: Optional[str] = None
+    institution_name: Optional[str] = None
+    programme: Optional[str] = None
+    source_type: str
+    is_sandbox: bool
+
+
+class VerificationHistoryResponse(BaseModel):
+    items: List[VerificationHistoryItem]
+    total: int
+    limit: int
+    offset: int
+
+
+

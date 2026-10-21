@@ -62,6 +62,17 @@ class SandboxAPAARAdapter(BaseAPAARAdapter):
             "intake_current": 124,
             "intake_cap": 120,
         },
+        "4040-4040-4040-IN": {
+            "name": "Unregistered Student",
+            "institute_code": "NOT_FOUND",
+            "institute_name": "No AICTE Record Found",
+            "programme": "N/A",
+            "admission_year": "N/A",
+            "status": "not_found",
+            "has_collision": False,
+            "intake_current": 0,
+            "intake_cap": 0,
+        },
     }
 
     @staticmethod

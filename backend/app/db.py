@@ -15,6 +15,7 @@ from app.orm_models import (
     IntegrityFindingORM,
     AuditEventORM,
     BatchImportLogORM,
+    VerificationHistoryORM,
 )
 from app.models import (
     RoleEnum,
@@ -30,6 +31,8 @@ from app.models import (
     IntegrityFindingSchema,
     AuditEventSchema,
     UserResponse,
+    VerificationHistoryItem,
+    VerificationHistoryResponse,
 )
 
 
@@ -1212,6 +1215,128 @@ def log_audit_event(
         ))
         db.commit()
     return event
+
+
+def mask_apaar_identifier(apaar_id: str) -> str:
+    """Masks an APAAR identifier for secure user-facing display."""
+    from app.services.integrity_engine import IntegrityEngine
+    return IntegrityEngine.mask_apaar(apaar_id)
+
+
+def record_verification_attempt(
+    apaar_id: str,
+    status: str,
+    source_type: str,
+    is_sandbox: bool,
+    institution_code: Optional[str] = None,
+    institution_name: Optional[str] = None,
+    programme: Optional[str] = None,
+    actor_email: Optional[str] = None,
+    actor_role: Optional[str] = None,
+    actor_institution: Optional[str] = None,
+    session_id: Optional[str] = None,
+) -> VerificationHistoryORM:
+    """
+    Persists a verified or queried APAAR attempt into the verification_history table.
+    Enforces minimum appropriate fields, server-generated timestamp, and masked APAAR.
+    """
+    clean_id = apaar_id.strip()
+    safe_session = str(session_id) if (session_id is not None and not hasattr(session_id, "default")) else None
+    entry = VerificationHistoryORM(
+        id=f"VREC-{uuid.uuid4().hex[:10].upper()}",
+        apaar_id=clean_id,
+        apaar_id_masked=mask_apaar_identifier(clean_id),
+        status=status,
+        source_type=source_type,
+        is_sandbox=1 if is_sandbox else 0,
+        institution_code=institution_code,
+        institution_name=institution_name,
+        programme=programme,
+        actor_email=actor_email,
+        actor_role=actor_role,
+        actor_institution=actor_institution,
+        session_id=safe_session,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+    with get_db_context() as db:
+        db.add(entry)
+        db.commit()
+        db.refresh(entry)
+    return entry
+
+
+def get_verification_history(
+    actor_user: Optional[dict] = None,
+    session_id: Optional[str] = None,
+    limit: int = 10,
+    offset: int = 0,
+) -> VerificationHistoryResponse:
+    """
+    Retrieves paginated verification history ordered newest first.
+    Enforces role/institution scoping:
+    - Central Regulator (auditor): sees all verification history across institutions.
+    - Institutional Nodal (node): scoped to their institution_code or actor_email.
+    - Public / Unauthenticated verifier: scoped strictly to their session_id if provided.
+    """
+    with get_db_context() as db:
+        query = db.query(VerificationHistoryORM)
+
+        if actor_user:
+            role = actor_user.get("role")
+            inst_id = actor_user.get("institute_id")
+            if role in [RoleEnum.AUDITOR, "auditor"]:
+                # Central regulator: unrestricted
+                pass
+            elif role in [RoleEnum.NODE, "node"] and inst_id:
+                # Nodal officer: restricted to their institution or attempts they performed
+                query = query.filter(
+                    (VerificationHistoryORM.institution_code == inst_id)
+                    | (VerificationHistoryORM.actor_institution == inst_id)
+                    | (VerificationHistoryORM.actor_email == actor_user.get("email"))
+                )
+            else:
+                if actor_user.get("email"):
+                    query = query.filter(VerificationHistoryORM.actor_email == actor_user.get("email"))
+        elif session_id:
+            # Public session scoped
+            query = query.filter(VerificationHistoryORM.session_id == session_id)
+        else:
+            # Unauthenticated without session ID - return empty to protect privacy
+            query = query.filter(False)
+
+        total = query.count()
+        rows = (
+            query.order_by(
+                VerificationHistoryORM.timestamp.desc(),
+                VerificationHistoryORM.id.desc(),
+            )
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+
+        items = [
+            VerificationHistoryItem(
+                id=r.id,
+                apaar_masked=r.apaar_id_masked,
+                apaar_raw=r.apaar_id,
+                status=r.status,
+                timestamp=r.timestamp,
+                institution_code=r.institution_code,
+                institution_name=r.institution_name,
+                programme=r.programme,
+                source_type=r.source_type,
+                is_sandbox=bool(r.is_sandbox),
+            )
+            for r in rows
+        ]
+
+    return VerificationHistoryResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
 
 
 def reset_findings_and_audit():

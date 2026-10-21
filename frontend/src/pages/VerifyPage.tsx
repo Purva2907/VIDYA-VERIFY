@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
-import type { VerificationResult } from '../services/api';
+import type { VerificationResult, VerificationHistoryItem } from '../services/api';
 import { GlassNavbar } from '../components/navigation/GlassNavbar';
 import { Footer } from '../components/navigation/Footer';
 import {
@@ -27,12 +27,26 @@ import {
   Clock,
 } from 'lucide-react';
 
-interface RecentItem {
-  id: string;
-  apaar_raw: string;
-  masked: string;
-  status: 'CLEAN' | 'COLLISION' | 'QUOTA';
-  timeAgo: string;
+function formatRelativeTime(timestamp: string): string {
+  try {
+    const parsedDate = new Date(timestamp.includes('T') ? timestamp : timestamp.replace(' ', 'T') + 'Z');
+    const now = new Date();
+    const diffMs = now.getTime() - parsedDate.getTime();
+    if (isNaN(diffMs) || diffMs < 0) return 'Just now';
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 60) return 'Just now';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin === 1) return '1 min ago';
+    if (diffMin < 60) return `${diffMin} mins ago`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour === 1) return '1 hour ago';
+    if (diffHour < 24) return `${diffHour} hours ago`;
+    const diffDay = Math.floor(diffHour / 24);
+    if (diffDay === 1) return '1 day ago';
+    return `${diffDay} days ago`;
+  } catch {
+    return 'Recent';
+  }
 }
 
 export const VerifyPage: React.FC = () => {
@@ -46,44 +60,28 @@ export const VerifyPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [showFullApaar, setShowFullApaar] = useState(false);
 
-  // Recent verification records matching reference screenshot
-  const recentVerifications: RecentItem[] = [
-    {
-      id: 'rec_1',
-      apaar_raw: '9024-8172-5501-IN',
-      masked: '9024-••••••••-5501',
-      status: 'CLEAN',
-      timeAgo: '2 mins ago',
-    },
-    {
-      id: 'rec_2',
-      apaar_raw: '3391-4412-8920-IN',
-      masked: '3391-••••••••-8920',
-      status: 'COLLISION',
-      timeAgo: '10 mins ago',
-    },
-    {
-      id: 'rec_3',
-      apaar_raw: '7721-1849-3382-IN',
-      masked: '7721-••••••••-3382',
-      status: 'QUOTA',
-      timeAgo: '18 mins ago',
-    },
-    {
-      id: 'rec_4',
-      apaar_raw: '6112-9901-1190-IN',
-      masked: '6112-••••••••-1190',
-      status: 'CLEAN',
-      timeAgo: '25 mins ago',
-    },
-    {
-      id: 'rec_5',
-      apaar_raw: '8843-1209-7712-IN',
-      masked: '8843-••••••••-7712',
-      status: 'CLEAN',
-      timeAgo: '42 mins ago',
-    },
-  ];
+  // Real Persistent Verification History
+  const [historyItems, setHistoryItems] = useState<VerificationHistoryItem[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const fetchHistory = async () => {
+    setIsHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const res = await api.getVerificationHistory({ limit: isExpanded ? 25 : 5, offset: 0 });
+      setHistoryItems(res.items || []);
+    } catch (err: any) {
+      setHistoryError(err.message || 'Unable to load verification history');
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, [isExpanded]);
 
   const handleVerify = async (e?: React.FormEvent, targetId?: string) => {
     if (e) e.preventDefault();
@@ -101,6 +99,8 @@ export const VerifyPage: React.FC = () => {
       setError(err.message || 'Verification failed. Please check the APAAR identifier format.');
     } finally {
       setIsVerifying(false);
+      // Immediately refresh the history list to reflect the actual attempt
+      fetchHistory();
     }
   };
 
@@ -738,45 +738,77 @@ export const VerifyPage: React.FC = () => {
                     Recent Verifications
                   </h3>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => selectSample('9024-8172-5501-IN')}
-                  className="text-[11px] font-semibold text-[#2391FF] hover:underline"
-                >
-                  View All
-                </button>
+                {historyItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-[11px] font-semibold text-[#2391FF] hover:underline"
+                  >
+                    {isExpanded ? 'Show Less' : 'View All'}
+                  </button>
+                )}
               </div>
 
-              <div className="space-y-2.5">
-                {recentVerifications.map((item) => (
+              {isHistoryLoading && historyItems.length === 0 ? (
+                <div className="py-8 flex flex-col items-center justify-center text-center gap-2">
+                  <Loader2 className="w-5 h-5 text-[#2391FF] animate-spin" />
+                  <span className="text-[11px] text-[#8E9CAE]">Loading verification history...</span>
+                </div>
+              ) : historyError && historyItems.length === 0 ? (
+                <div className="py-6 flex flex-col items-center justify-center text-center gap-2 px-2">
+                  <AlertTriangle className="w-5 h-5 text-[#FFCD54]" />
+                  <span className="text-[11px] text-[#8E9CAE]">{historyError}</span>
                   <button
-                    key={item.id}
                     type="button"
-                    onClick={() => selectSample(item.apaar_raw)}
-                    className="w-full flex items-center justify-between text-left p-1 rounded-lg hover:bg-[#0c141e] transition-colors group"
+                    onClick={fetchHistory}
+                    className="text-[11px] text-[#2391FF] hover:underline font-semibold"
                   >
-                    <span className="font-mono-code text-[11px] text-gray-300 group-hover:text-white transition-colors">
-                      {item.masked}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-mono-code ${
-                          item.status === 'CLEAN'
-                            ? 'border border-[#2391FF]/40 text-[#2391FF] bg-[#2391FF]/10'
-                            : item.status === 'COLLISION'
-                            ? 'border border-[#F70063]/40 text-[#F70063] bg-[#F70063]/10'
-                            : 'border border-[#FFCD54]/40 text-[#FFCD54] bg-[#FFCD54]/10'
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                      <span className="text-[10px] text-[#607286] w-16 text-right shrink-0">
-                        {item.timeAgo}
-                      </span>
-                    </div>
+                    Retry
                   </button>
-                ))}
-              </div>
+                </div>
+              ) : historyItems.length === 0 ? (
+                <div className="py-6 flex flex-col items-center justify-center text-center px-3 border border-dashed border-[#182633] rounded-xl bg-[#040609]">
+                  <Clock className="w-6 h-6 text-[#405267] mb-2" />
+                  <div className="text-xs font-semibold text-white">No verification history yet</div>
+                  <p className="text-[11px] text-[#8E9CAE] mt-1 max-w-[210px] leading-tight">
+                    Student identifiers checked through this terminal will appear here automatically.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {historyItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => selectSample(item.apaar_raw)}
+                      className="w-full flex items-center justify-between text-left p-1 rounded-lg hover:bg-[#0c141e] transition-colors group"
+                      title={`Click to re-verify ${item.apaar_masked}`}
+                    >
+                      <span className="font-mono-code text-[11px] text-gray-300 group-hover:text-white transition-colors truncate max-w-[130px]">
+                        {item.apaar_masked}
+                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase font-mono-code ${
+                            item.status === 'CLEAN'
+                              ? 'border border-[#2391FF]/40 text-[#2391FF] bg-[#2391FF]/10'
+                              : item.status === 'COLLISION'
+                              ? 'border border-[#F70063]/40 text-[#F70063] bg-[#F70063]/10'
+                              : item.status === 'QUOTA ALERT' || item.status === 'QUOTA'
+                              ? 'border border-[#FFCD54]/40 text-[#FFCD54] bg-[#FFCD54]/10'
+                              : 'border border-[#6B7280]/40 text-[#9CA3AF] bg-[#6B7280]/10'
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                        <span className="text-[10px] text-[#607286] w-16 text-right shrink-0">
+                          {formatRelativeTime(item.timestamp)}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Bottom Card: Status Legend */}

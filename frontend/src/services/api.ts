@@ -224,6 +224,39 @@ export interface VerificationResult {
   enrollment_number?: string;
 }
 
+export interface VerificationHistoryItem {
+  id: string;
+  apaar_masked: string;
+  apaar_raw: string;
+  status: 'CLEAN' | 'COLLISION' | 'QUOTA ALERT' | 'NOT FOUND' | string;
+  timestamp: string;
+  institution_code?: string | null;
+  institution_name?: string | null;
+  programme?: string | null;
+  source_type: string;
+  is_sandbox: boolean;
+}
+
+export interface VerificationHistoryResponse {
+  items: VerificationHistoryItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export function getOrCreateSessionId(): string {
+  try {
+    let sid = sessionStorage.getItem('vidya_verify_session_id');
+    if (!sid) {
+      sid = 'sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+      sessionStorage.setItem('vidya_verify_session_id', sid);
+    }
+    return sid;
+  } catch (e) {
+    return 'sess_fallback_' + Math.random().toString(36).substring(2, 10);
+  }
+}
+
 export interface IntegrityFinding {
   id: string;
   finding_type: 'DUPLICATE_CONCURRENT_ENROLMENT' | 'INTAKE_CAPACITY_EXCEEDED' | 'FORMAT_MISMATCH' | 'INSTITUTION_PROGRAMME_MISMATCH' | 'DATA_INTEGRITY_INCONSISTENCY';
@@ -622,13 +655,40 @@ export const api = {
   },
 
   // Verify APAAR
-  async verifyApaar(apaarId: string): Promise<VerificationResult> {
-    const res = await fetch(`${API_BASE}/api/verify/apaar?apaar_id=${encodeURIComponent(apaarId)}`, {
+  async verifyApaar(apaarId: string, sessionId?: string): Promise<VerificationResult> {
+    const sid = sessionId || getOrCreateSessionId();
+    const res = await fetch(`${API_BASE}/api/verify/apaar?apaar_id=${encodeURIComponent(apaarId)}&session_id=${encodeURIComponent(sid)}`, {
       headers: getAuthHeader(),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || 'APAAR verification failed');
+    }
+    return res.json();
+  },
+
+  // Verification History
+  async getVerificationHistory(params?: {
+    limit?: number;
+    offset?: number;
+    sessionId?: string;
+  }): Promise<VerificationHistoryResponse> {
+    const sid = params?.sessionId || getOrCreateSessionId();
+    const limit = params?.limit ?? 10;
+    const offset = params?.offset ?? 0;
+    const q = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+    if (sid) {
+      q.append('session_id', sid);
+    }
+    const res = await fetch(`${API_BASE}/api/verify/history?${q.toString()}`, {
+      headers: getAuthHeader(),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to load verification history');
     }
     return res.json();
   },
