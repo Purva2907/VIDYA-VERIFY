@@ -1,4 +1,5 @@
 import os
+import re
 import hashlib
 import time
 from typing import Dict, Any, List, Optional
@@ -164,12 +165,19 @@ class IntegrityEngine:
         2. Sanctioned intake quota limits
         """
         norm_apaar = cls.normalize_apaar(apaar_id)
+        norm_name = re.sub(r'[\s\.\-]+', '', student_name).lower() if student_name else ""
+        norm_dob = dob.strip() if dob else ""
+        norm_email = email.strip().lower() if email else ""
+        norm_enroll = enrollment_number.strip().upper() if enrollment_number else ""
+
         duplicate_col = False
         collision_notes = None
 
         for enr in existing_enrolments:
             enr_norm = cls.normalize_apaar(enr.get("apaar_id", ""))
             enr_inst = (enr.get("institute_code") or "").strip().upper()
+
+            # 1. Exact identifier collision across institutions
             if enr_norm and enr_norm == norm_apaar and enr_inst != institute_code.strip().upper():
                 duplicate_col = True
                 collision_notes = (
@@ -177,6 +185,30 @@ class IntegrityEngine:
                     f"({enr.get('institute_code')}) and {institute_name} ({institute_code})."
                 )
                 break
+
+            # 2. Potential duplicate candidate (matching name + DOB/email/enrollment across campuses)
+            enr_name = re.sub(r'[\s\.\-]+', '', enr.get("student_name", "")).lower()
+            enr_dob = (enr.get("dob") or "").strip()
+            enr_email = (enr.get("email") or "").strip().lower()
+            enr_enroll = (enr.get("enrollment_number") or "").strip().upper()
+
+            if norm_name and enr_name == norm_name and enr_inst != institute_code.strip().upper():
+                matched_attr = None
+                if norm_dob and enr_dob and norm_dob == enr_dob:
+                    matched_attr = f"matching date of birth ({norm_dob})"
+                elif norm_email and enr_email and norm_email == enr_email:
+                    matched_attr = f"matching email address ({norm_email})"
+                elif norm_enroll and enr_enroll and norm_enroll == enr_enroll:
+                    matched_attr = f"matching enrollment number ({norm_enroll})"
+
+                if matched_attr:
+                    duplicate_col = True
+                    collision_notes = (
+                        f"POTENTIAL DUPLICATE CANDIDATE: Possible cross-institution duplicate with "
+                        f"{enr.get('institute_name')} ({enr.get('institute_code')}) based on {matched_attr}. "
+                        f"Requires administrative verification."
+                    )
+                    break
 
         # Check intake quota
         intake_warning = current_intake > intake_cap

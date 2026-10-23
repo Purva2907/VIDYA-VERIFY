@@ -497,10 +497,21 @@ def get_institution_capacity(code: str, authorization: Optional[str] = Header(No
         )
         util_pct = (enrolled / p.intake_cap * 100.0) if p.intake_cap > 0 else 0.0
         cap_status = "NORMAL"
+        prog_compliance = "WITHIN_CAPACITY"
         if enrolled > p.intake_cap:
             cap_status = "EXCEEDED"
-        elif enrolled >= p.intake_cap * 0.9:
+            prog_compliance = "OVER_CAPACITY"
+            status_explanation = f"Programme enrolled ({enrolled}) exceeds sanctioned capacity ({p.intake_cap})."
+        elif enrolled == p.intake_cap:
             cap_status = "NEAR_CAPACITY"
+            prog_compliance = "CAPACITY_REACHED"
+            status_explanation = f"Programme is at 100% capacity ({enrolled}/{p.intake_cap})."
+        elif enrolled >= p.intake_cap * 0.85:
+            cap_status = "NEAR_CAPACITY"
+            prog_compliance = "WITHIN_CAPACITY"
+            status_explanation = f"Programme is near capacity ({round(util_pct, 1)}% utilized)."
+        else:
+            status_explanation = f"Within sanctioned quota ({enrolled}/{p.intake_cap} seats)."
 
         program_breakdown.append({
             "programme_id": p.id,
@@ -511,7 +522,27 @@ def get_institution_capacity(code: str, authorization: Optional[str] = Header(No
             "intake_current": enrolled,
             "utilization_pct": round(util_pct, 1),
             "status": cap_status,
+            "compliance_status": prog_compliance,
+            "status_explanation": status_explanation,
         })
+
+    # Institution overall compliance evaluation
+    if inst.total_approved_intake <= 0:
+        overall_compliance = "INTAKE_MISSING"
+        overall_compliance_msg = "Sanctioned intake capacity has not been configured for this institution."
+    elif inst.has_allocation_warning:
+        overall_compliance = "REQUIRES_REVIEW"
+        overall_compliance_msg = inst.allocation_warning_message or "Programme seat allocations conflict with sanctioned intake."
+    elif inst.current_enrolment > inst.total_approved_intake:
+        overall_compliance = "OVER_CAPACITY"
+        diff = inst.current_enrolment - inst.total_approved_intake
+        overall_compliance_msg = f"Enrolment ({inst.current_enrolment}) exceeds sanctioned intake ({inst.total_approved_intake}) by {diff} seats."
+    elif inst.current_enrolment == inst.total_approved_intake:
+        overall_compliance = "CAPACITY_REACHED"
+        overall_compliance_msg = f"Institution sanctioned intake capacity ({inst.total_approved_intake} seats) is 100% utilized."
+    else:
+        overall_compliance = "WITHIN_CAPACITY"
+        overall_compliance_msg = f"Operating safely within sanctioned intake capacity ({inst.capacity_utilization_pct}% utilized)."
 
     return {
         "institution_code": clean_code,
@@ -523,6 +554,8 @@ def get_institution_capacity(code: str, authorization: Optional[str] = Header(No
         "programme_allocations_total": inst.programme_allocations_total,
         "has_allocation_warning": inst.has_allocation_warning,
         "allocation_warning_message": inst.allocation_warning_message,
+        "compliance_status": overall_compliance,
+        "compliance_message": overall_compliance_msg,
         "programmes": program_breakdown,
         "has_capacity_warnings": any(p["status"] == "EXCEEDED" for p in program_breakdown) or inst.has_allocation_warning,
     }

@@ -142,8 +142,8 @@ def verify_apaar(
             detail="Invalid APAAR ID format. Must contain at least 12 alphanumeric characters (e.g. '9024-8172-5501-IN').",
         )
 
-    record = result.get("record", {})
-    is_not_found = record.get("status") == "not_found"
+    record = result.get("record") or {}
+    is_not_found = not record or record.get("status") == "not_found"
     has_collision = record.get("has_collision", False)
     intake_curr = record.get("intake_current", 120)
     intake_cap = record.get("intake_cap", 120)
@@ -162,11 +162,13 @@ def verify_apaar(
         status_str = "VALID"
         history_status = "CLEAN"
 
-    merkle_root = IntegrityEngine.calculate_merkle_root([clean_id, record.get("institute_code", ""), status_str])
-    ecdsa_sig = IntegrityEngine.generate_ecdsa_signature(clean_id, record.get("institute_code", ""), status_str)
+    inst_code_for_crypto = record.get("institute_code", "UNREGISTERED")
+    merkle_root = IntegrityEngine.calculate_merkle_root([clean_id, inst_code_for_crypto, status_str])
+    ecdsa_sig = IntegrityEngine.generate_ecdsa_signature(clean_id, inst_code_for_crypto, status_str)
 
     if is_not_found:
-        details = "No authoritative or synthetic registry record found matching this APAAR identifier."
+        note_text = result.get("notes") or "Identifier satisfies 12-digit format rules, but is not enrolled in the institutional ledger. Live verification requires connection to National APAAR Registry."
+        details = f"SANDBOX SIMULATION: {note_text}"
     elif has_collision:
         details = "SANDBOX SIMULATION: Concurrent dual-enrolment collision identified across multiple universities."
     elif has_warning:
@@ -190,9 +192,9 @@ def verify_apaar(
         status=history_status,
         source_type="NOT_FOUND" if is_not_found else "SANDBOX_SYNTHETIC",
         is_sandbox=True,
-        institution_code=record.get("institute_code"),
-        institution_name=record.get("institute_name"),
-        programme=record.get("programme"),
+        institution_code=record.get("institute_code") if not is_not_found else "NOT_FOUND",
+        institution_name=record.get("institute_name") if not is_not_found else "No AICTE Record Found",
+        programme=record.get("programme") if not is_not_found else "N/A",
         actor_email=user.get("email") if user else None,
         actor_role=str(user.get("role")) if user else "public",
         actor_institution=user.get("institute_id") if user else None,
@@ -201,11 +203,11 @@ def verify_apaar(
 
     return VerificationResponse(
         apaar_id=clean_id,
-        student_name=record.get("name", "Synthetic Student Candidate"),
-        institute=record.get("institute_name", "AICTE Accredited Campus"),
-        institute_code=record.get("institute_code", "IND-AICTE-1042"),
-        programme=record.get("programme", "B.Tech Standard Programme"),
-        admission_year=record.get("admission_year", "2024-2028"),
+        student_name=record.get("name", "Unregistered Candidate" if is_not_found else "Synthetic Student Candidate"),
+        institute=record.get("institute_name", "No Institutional Record" if is_not_found else "AICTE Accredited Campus"),
+        institute_code=record.get("institute_code", "NOT_FOUND" if is_not_found else "IND-AICTE-1042"),
+        programme=record.get("programme", "N/A" if is_not_found else "B.Tech Standard Programme"),
+        admission_year=record.get("admission_year", "N/A" if is_not_found else "2024-2028"),
         status=status_str,
         is_valid=not is_not_found and not has_collision and not has_warning,
         has_duplicate_collision=has_collision,
@@ -214,7 +216,7 @@ def verify_apaar(
         ecdsa_signature=ecdsa_sig,
         timestamp=datetime.now(timezone.utc).isoformat(),
         adapter_mode="SANDBOX_SYNTHETIC",
-        source_type="NOT_FOUND" if is_not_found else "SANDBOX_SYNTHETIC",
+        source_type="SANDBOX_SYNTHETIC",
         is_sandbox=True,
         is_external_official=False,
         details=details,

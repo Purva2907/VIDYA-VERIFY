@@ -186,7 +186,15 @@ def add_student(payload: StudentCreateRequest, authorization: Optional[str] = He
 
     # Existing enrolments list for multi-campus collision detection
     existing_enrolments = [
-        {"apaar_id": s.apaar_id, "institute_code": s.institute_code, "institute_name": s.institute_name}
+        {
+            "apaar_id": s.apaar_id,
+            "student_name": s.student_name,
+            "institute_code": s.institute_code,
+            "institute_name": s.institute_name,
+            "dob": s.dob,
+            "email": s.email,
+            "enrollment_number": s.enrollment_number,
+        }
         for s in STUDENT_LEDGER
     ]
 
@@ -263,6 +271,38 @@ def add_student(payload: StudentCreateRequest, authorization: Optional[str] = He
             review_status=ReviewStatusEnum.PENDING_REVIEW,
             detection_timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
         )
+
+    # Check for potential duplicate student records (same Name + same DOB or Enrollment Number or Email)
+    clean_name = payload.student_name.strip().lower()
+    for s in STUDENT_LEDGER:
+        if s.id != evaluated.id and s.apaar_id != evaluated.apaar_id and s.student_name.strip().lower() == clean_name:
+            same_dob = payload.dob and s.dob and payload.dob.strip() == s.dob.strip()
+            same_enroll = payload.enrollment_number and s.enrollment_number and payload.enrollment_number.strip().lower() == s.enrollment_number.strip().lower()
+            same_email = payload.email and s.email and payload.email.strip().lower() == s.email.strip().lower()
+            if same_dob or same_enroll or same_email:
+                fnd_id = f"FND-POTENTIAL-{uuid.uuid4().hex[:6].upper()}"
+                INTEGRITY_FINDINGS_DB[fnd_id] = IntegrityFindingSchema(
+                    id=fnd_id,
+                    finding_type=FindingTypeEnum.POTENTIAL_DUPLICATE_STUDENT,
+                    severity=FindingSeverityEnum.WARNING,
+                    apaar_id_masked=IntegrityEngine.mask_apaar(evaluated.apaar_id),
+                    apaar_id=evaluated.apaar_id,
+                    student_name=evaluated.student_name,
+                    primary_institute_code=inst_code,
+                    primary_institute_name=inst_name,
+                    secondary_institute_code=s.institute_code,
+                    secondary_institute_name=s.institute_name,
+                    programme=course,
+                    admission_year=year,
+                    affected_record_ids=[evaluated.id, s.id],
+                    reason=(
+                        f"Potential duplicate candidate flagged: Matches name '{evaluated.student_name}' and demographic credentials "
+                        f"of existing record at {s.institute_name} (APAAR: {IntegrityEngine.mask_apaar(s.apaar_id)})."
+                    ),
+                    review_status=ReviewStatusEnum.PENDING_REVIEW,
+                    detection_timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                )
+                break
 
     # Record audit log
     actor_email = user.get("email") if user else "system@aicte.gov.in"

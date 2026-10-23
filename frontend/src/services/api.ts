@@ -94,7 +94,8 @@ export interface ProgrammeCapacityItem {
   intake_cap: number;
   intake_current: number;
   utilization_pct: number;
-  status: 'NORMAL' | 'NEAR_CAPACITY' | 'EXCEEDED';
+  status: 'NORMAL' | 'NEAR_CAPACITY' | 'EXCEEDED' | 'WITHIN_CAPACITY' | 'CAPACITY_REACHED' | 'OVER_CAPACITY' | 'INTAKE_MISSING' | 'REQUIRES_REVIEW';
+  status_explanation?: string;
 }
 
 export interface InstitutionCapacity {
@@ -147,6 +148,12 @@ export interface BatchImportSummary {
   clean_approved: number;
   duplicate_collisions: number;
   intake_warnings: number;
+  rejected_details?: Array<{
+    row_index: number;
+    apaar_id: string;
+    student_name: string;
+    reason: string;
+  }>;
   merkle_batch_hash: string;
   errors: string[];
   records: StudentRecord[];
@@ -759,12 +766,37 @@ export const api = {
     return res.json();
   },
 
+  // Import Template
+  async getImportTemplate(): Promise<{ filename: string; csv: string }> {
+    const res = await fetch(`${API_BASE}/api/imports/template`, {
+      headers: getAuthHeader(),
+    });
+    if (!res.ok) throw new Error('Failed to download import template');
+    return res.json();
+  },
+
   // Audit Logs
-  async getAuditLogs(params?: { action?: string; actor_email?: string; page?: number }): Promise<AuditEvent[]> {
+  async getAuditLogs(params?: {
+    action?: string;
+    actor_email?: string;
+    institution?: string;
+    outcome?: string;
+    from_date?: string;
+    to_date?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<AuditEvent[]> {
     const q = new URLSearchParams();
     if (params?.action) q.append('action', params.action);
     if (params?.actor_email) q.append('actor_email', params.actor_email);
+    if (params?.institution) q.append('institution', params.institution);
+    if (params?.outcome) q.append('outcome', params.outcome);
+    if (params?.from_date) q.append('from_date', params.from_date);
+    if (params?.to_date) q.append('to_date', params.to_date);
+    if (params?.search) q.append('search', params.search);
     if (params?.page) q.append('page', params.page.toString());
+    if (params?.limit) q.append('limit', params.limit.toString());
 
     const res = await fetch(`${API_BASE}/api/audit/logs?${q.toString()}`, {
       headers: getAuthHeader(),
@@ -800,7 +832,15 @@ export const api = {
     return res.json();
   },
 
-  async exportReportCsv(reportType: 'enrolment' | 'capacity' | 'findings'): Promise<{ filename: string; csv: string }> {
+  async getPrintableSummary(): Promise<any> {
+    const res = await fetch(`${API_BASE}/api/reports/printable-summary`, {
+      headers: getAuthHeader(),
+    });
+    if (!res.ok) throw new Error('Failed to generate printable summary report');
+    return res.json();
+  },
+
+  async exportReportCsv(reportType: 'enrolment' | 'capacity' | 'findings' | 'audit' | 'verification-history'): Promise<{ filename: string; csv: string }> {
     const res = await fetch(`${API_BASE}/api/reports/export/${reportType}`, {
       headers: getAuthHeader(),
     });

@@ -73,7 +73,7 @@ def get_metrics(
             and (s.institute_code.upper() == target_code or target_code in (s.notes or "").upper())
         ]
 
-        # Findings scoped to this node
+    # Findings scoped to this node
         node_findings = [
             f for f in INTEGRITY_FINDINGS_DB.values()
             if f.primary_institute_code.upper() == target_code
@@ -83,21 +83,68 @@ def get_metrics(
         pending_reviews = sum(1 for f in node_findings if f.review_status == ReviewStatusEnum.PENDING_REVIEW)
         resolved_reviews = sum(1 for f in node_findings if "RESOLVED" in str(f.review_status))
 
+        from app.services.apaar_adapter import SandboxAPAARAdapter
+        from app.db import AUDIT_LOG_DB
+        from app.database import get_db_context
+        from app.orm_models import VerificationHistoryORM
+
+        valid_format_cnt = sum(1 for s in inst_records if SandboxAPAARAdapter.validate_format(s.apaar_id))
+        invalid_format_cnt = total - valid_format_cnt
+
+        with get_db_context() as db:
+            clean_hist = db.query(VerificationHistoryORM).filter(
+                VerificationHistoryORM.institution_code == target_code,
+                VerificationHistoryORM.status == "CLEAN"
+            ).count()
+            coll_hist = db.query(VerificationHistoryORM).filter(
+                VerificationHistoryORM.institution_code == target_code,
+                VerificationHistoryORM.status == "COLLISION"
+            ).count()
+            quota_hist = db.query(VerificationHistoryORM).filter(
+                VerificationHistoryORM.institution_code == target_code,
+                VerificationHistoryORM.status == "QUOTA ALERT"
+            ).count()
+            nf_hist = db.query(VerificationHistoryORM).filter(
+                VerificationHistoryORM.institution_code == target_code,
+                VerificationHistoryORM.status == "NOT FOUND"
+            ).count()
+
+        recent_activity = [
+            {
+                "id": a.id,
+                "action": a.action,
+                "actor": a.actor_email,
+                "institution": a.actor_institution,
+                "outcome": a.outcome,
+                "timestamp": a.timestamp,
+                "details": a.details,
+            }
+            for a in list(AUDIT_LOG_DB)
+            if a.actor_institution == target_code or target_code in a.details.upper()
+        ][:6]
+
         return {
             "is_node_view": True,
             "institution_code": target_code,
             "institution_name": inst_stats.name if inst_stats else (user.get("institute_name") if user else "Institution Node"),
             "total_students": total,
+            "records_processed": total,
             "verified_count": verified,
             "pending_count": pending,
             "attention_count": duplicate + warning,
             "duplicate_count": duplicate,
+            "potential_duplicate_records": duplicate,
             "warning_count": warning,
+            "intake_compliance_alerts": warning,
+            "valid_format_records": valid_format_cnt,
+            "invalid_format_records": invalid_format_cnt,
             "current_enrolment": enrolled,
             "approved_intake_capacity": total_cap,
             "capacity_utilization_pct": util_pct,
             "programmes_count": len(progs),
+            "total_programmes": len(progs),
             "institutes_count": 1,
+            "total_institutions": 1,
             "is_empty": total == 0,
             "has_critical_conflicts": len(duplicate_cases) > 0,
             "duplicate_cases": duplicate_cases,
@@ -106,6 +153,13 @@ def get_metrics(
             "pending_reviews_count": pending_reviews,
             "resolved_reviews_count": resolved_reviews,
             "total_findings_count": len(node_findings),
+            "verification_outcomes": {
+                "clean": clean_hist,
+                "collision": coll_hist,
+                "quota_alert": quota_hist,
+                "not_found": nf_hist,
+            },
+            "recent_activity": recent_activity,
         }
 
     # Platform Administrator View (Global)
@@ -117,6 +171,34 @@ def get_metrics(
     attention = duplicate + warning
 
     total_institutions = len(INSTITUTIONS_DB)
+    total_progs = sum(len(PROGRAMMES_DB.get(k, [])) for k in INSTITUTIONS_DB.keys())
+
+    from app.services.apaar_adapter import SandboxAPAARAdapter
+    from app.db import AUDIT_LOG_DB
+    from app.database import get_db_context
+    from app.orm_models import VerificationHistoryORM
+
+    valid_format_cnt = sum(1 for s in records if SandboxAPAARAdapter.validate_format(s.apaar_id))
+    invalid_format_cnt = total_students - valid_format_cnt
+
+    with get_db_context() as db:
+        clean_hist = db.query(VerificationHistoryORM).filter(VerificationHistoryORM.status == "CLEAN").count()
+        coll_hist = db.query(VerificationHistoryORM).filter(VerificationHistoryORM.status == "COLLISION").count()
+        quota_hist = db.query(VerificationHistoryORM).filter(VerificationHistoryORM.status == "QUOTA ALERT").count()
+        nf_hist = db.query(VerificationHistoryORM).filter(VerificationHistoryORM.status == "NOT FOUND").count()
+
+    recent_activity = [
+        {
+            "id": a.id,
+            "action": a.action,
+            "actor": a.actor_email,
+            "institution": a.actor_institution,
+            "outcome": a.outcome,
+            "timestamp": a.timestamp,
+            "details": a.details,
+        }
+        for a in list(AUDIT_LOG_DB)
+    ][:8]
 
     # Institutions needing attention (have duplicates or intake warnings)
     institutions_needing_attention = []
@@ -177,12 +259,18 @@ def get_metrics(
     return {
         "is_node_view": False,
         "total_institutions": total_institutions,
+        "total_programmes": total_progs,
         "total_students": total_students,
+        "records_processed": total_students,
         "verified_count": verified,
         "pending_count": pending,
         "attention_count": attention,
         "duplicate_count": duplicate,
+        "potential_duplicate_records": duplicate,
         "warning_count": warning,
+        "intake_compliance_alerts": warning,
+        "valid_format_records": valid_format_cnt,
+        "invalid_format_records": invalid_format_cnt,
         "institutes_count": total_institutions,
         "is_empty": total_students == 0,
         "has_critical_conflicts": duplicate > 0,
@@ -192,4 +280,11 @@ def get_metrics(
         "pending_reviews_count": pending_reviews,
         "resolved_reviews_count": resolved_reviews,
         "total_findings_count": len(all_findings),
+        "verification_outcomes": {
+            "clean": clean_hist,
+            "collision": coll_hist,
+            "quota_alert": quota_hist,
+            "not_found": nf_hist,
+        },
+        "recent_activity": recent_activity,
     }

@@ -118,7 +118,9 @@ export const FindingsReviewPanel: React.FC<FindingsReviewPanelProps> = ({ onFind
     }
   };
 
-  const handleExportReport = async (type: 'enrolment' | 'capacity' | 'findings') => {
+  const [isGeneratingPrintable, setIsGeneratingPrintable] = useState(false);
+
+  const handleExportReport = async (type: 'enrolment' | 'capacity' | 'findings' | 'audit' | 'verification-history') => {
     setExportingType(type);
     try {
       const res = await api.exportReportCsv(type);
@@ -134,6 +136,124 @@ export const FindingsReviewPanel: React.FC<FindingsReviewPanelProps> = ({ onFind
       alert(err.message || `Failed to export ${type} report.`);
     } finally {
       setExportingType(null);
+    }
+  };
+
+  const handlePrintableSummary = async () => {
+    setIsGeneratingPrintable(true);
+    try {
+      const summary = await api.getPrintableSummary();
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>VIDYA-VERIFY — Executive Compliance Dossier</title>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
+                h1 { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 4px; }
+                .meta { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+                .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+                .badge-warn { background: #fef3c7; color: #b45309; }
+                .badge-danger { background: #fee2e2; color: #b91c1c; }
+                .badge-ok { background: #dcfce7; color: #15803d; }
+                table { width: 100%; border-collapse: collapse; margin-top: 16px; margin-bottom: 24px; font-size: 13px; }
+                th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+                th { background-color: #f8fafc; font-weight: 600; }
+                .disclaimer { margin-top: 40px; padding: 12px; background: #f1f5f9; border-left: 4px solid #0284c7; font-size: 12px; color: #475569; }
+              </style>
+            </head>
+            <body>
+              <h1>VIDYA-VERIFY — Regulatory Compliance Dossier</h1>
+              <div class="meta">
+                <strong>Platform:</strong> AICTE APAAR Student Verification · <strong>Generated:</strong> ${summary.generated_at} · <strong>Scope:</strong> ${summary.scope}
+              </div>
+              
+              <h2>1. System Integrity Overview</h2>
+              <table>
+                <tr>
+                  <th>Total Institutions</th>
+                  <th>Total Verification Queries</th>
+                  <th>Active Findings</th>
+                  <th>Resolved Findings</th>
+                  <th>Intake Capacity Warnings</th>
+                </tr>
+                <tr>
+                  <td>${summary.institutions_summary?.length || 0}</td>
+                  <td>${summary.verification_overview?.total_queries || 0}</td>
+                  <td>${summary.findings_summary?.pending_review_count || 0}</td>
+                  <td>${summary.findings_summary?.resolved_count || 0}</td>
+                  <td>${summary.capacity_breaches?.length || 0}</td>
+                </tr>
+              </table>
+
+              <h2>2. Institution Status Summary</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Institution Name</th>
+                    <th>Status</th>
+                    <th>Sanctioned Quota</th>
+                    <th>Enrolled</th>
+                    <th>Utilization</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(summary.institutions_summary || []).map((i: any) => `
+                    <tr>
+                      <td><code>${i.code}</code></td>
+                      <td>${i.name}</td>
+                      <td><span class="badge ${i.status === 'approved' ? 'badge-ok' : 'badge-warn'}">${String(i.status).toUpperCase()}</span></td>
+                      <td>${i.total_approved_intake}</td>
+                      <td>${i.current_enrolment}</td>
+                      <td><strong>${i.capacity_utilization_pct}%</strong></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+
+              <h2>3. Sanctioned Intake Capacity Breaches &amp; Quota Warnings</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Institution</th>
+                    <th>Programme</th>
+                    <th>Quota</th>
+                    <th>Admitted</th>
+                    <th>Utilization</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(summary.capacity_breaches || []).length === 0 ? '<tr><td colspan="6" style="text-align: center; color: #64748b;">No capacity breaches detected across campuses.</td></tr>' : (summary.capacity_breaches || []).map((c: any) => `
+                    <tr>
+                      <td>${c.institution_name} (${c.institution_code})</td>
+                      <td>${c.programme_name}</td>
+                      <td>${c.intake_cap}</td>
+                      <td>${c.intake_current}</td>
+                      <td><strong>${c.utilization_pct}%</strong></td>
+                      <td><span class="badge badge-danger">${c.status}</span></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+
+              <div class="disclaimer">
+                <strong>Regulatory Notice:</strong> ${summary.disclaimer || 'Data generated for official regulatory oversight. APAAR format validation is verified against AICTE schemas. Official government live verification requires accredited National Gateway integration.'}
+              </div>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 500);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to generate printable summary dossier.');
+    } finally {
+      setIsGeneratingPrintable(false);
     }
   };
 
@@ -494,88 +614,166 @@ export const FindingsReviewPanel: React.FC<FindingsReviewPanelProps> = ({ onFind
 
       {/* TAB 3: REGULATORY COMPLIANCE REPORTS */}
       {activeTab === 'reports' && (
-        <div className="p-4 sm:p-5 space-y-4">
-          <p className="text-xs text-[var(--color-text-secondary)]">
-            Export persistent institution and student enrolment datasets aligned with AICTE regulatory guidelines. Reports reflect real-time database state.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Report 1: Enrolment Summary */}
-            <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-3">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-primary)]">
-                  <FileText className="w-4 h-4 text-[var(--color-brand-blue)]" />
-                  <span>Enrolment Summary Report</span>
-                </div>
-                <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
-                  Aggregate campus breakdown: verified records, pending reviews, quota alerts, and duplicate counts.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleExportReport('enrolment')}
-                disabled={exportingType === 'enrolment'}
-                className="w-full py-2 px-3 rounded-lg bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] hover:border-[var(--color-brand-blue)] text-xs font-semibold flex items-center justify-center gap-2 text-[var(--color-text-primary)] transition-colors"
-              >
-                {exportingType === 'enrolment' ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Download className="w-3.5 h-3.5 text-[var(--color-brand-blue)]" />
-                )}
-                <span>Download Enrolment CSV</span>
-              </button>
+        <div className="p-4 sm:p-5 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)]">
+            <div>
+              <h4 className="text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-[var(--color-brand-blue)]" />
+                <span>Executive Regulatory Dossier</span>
+              </h4>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                Generate an official, printable audit dossier with institution intake breakdown, compliance alerts, and audit signatures.
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={handlePrintableSummary}
+              disabled={isGeneratingPrintable}
+              className="px-4 py-2 rounded-xl bg-[var(--color-brand-blue)] text-white text-xs font-semibold hover:opacity-90 transition-opacity flex items-center gap-2 shrink-0 shadow-sm"
+            >
+              {isGeneratingPrintable ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FileText className="w-3.5 h-3.5" />
+              )}
+              <span>Generate Printable Dossier</span>
+            </button>
+          </div>
 
-            {/* Report 2: Intake Capacity Utilization */}
-            <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-3">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-primary)]">
-                  <GraduationCap className="w-4 h-4 text-[var(--color-brand-yellow)]" />
-                  <span>Intake Capacity Compliance</span>
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-3">
+              Downloadable CSV Reports (Formula-Safe Protected)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Report 1: Enrolment Summary */}
+              <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-primary)]">
+                    <FileText className="w-4 h-4 text-[var(--color-brand-blue)]" />
+                    <span>Enrolment Summary</span>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
+                    Aggregate campus breakdown: verified records, pending reviews, quota alerts, and duplicate counts.
+                  </p>
                 </div>
-                <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
-                  Programme-level seat allocation vs. approved intake cap. Flags exceeding or near-capacity programmes.
-                </p>
+                <button
+                  type="button"
+                  onClick={() => handleExportReport('enrolment')}
+                  disabled={exportingType === 'enrolment'}
+                  className="w-full py-2 px-3 rounded-lg bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] hover:border-[var(--color-brand-blue)] text-xs font-semibold flex items-center justify-center gap-2 text-[var(--color-text-primary)] transition-colors"
+                >
+                  {exportingType === 'enrolment' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-[var(--color-brand-blue)]" />
+                  )}
+                  <span>Download Enrolment CSV</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => handleExportReport('capacity')}
-                disabled={exportingType === 'capacity'}
-                className="w-full py-2 px-3 rounded-lg bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] hover:border-[var(--color-brand-yellow)] text-xs font-semibold flex items-center justify-center gap-2 text-[var(--color-text-primary)] transition-colors"
-              >
-                {exportingType === 'capacity' ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Download className="w-3.5 h-3.5 text-[var(--color-brand-yellow)]" />
-                )}
-                <span>Download Capacity CSV</span>
-              </button>
-            </div>
 
-            {/* Report 3: Duplicate & Integrity Findings */}
-            <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-3">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-primary)]">
-                  <ShieldAlert className="w-4 h-4 text-[#F70063]" />
-                  <span>Duplicate &amp; Violation Registry</span>
+              {/* Report 2: Intake Capacity Utilization */}
+              <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-primary)]">
+                    <GraduationCap className="w-4 h-4 text-[var(--color-brand-yellow)]" />
+                    <span>Intake Capacity Compliance</span>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
+                    Programme-level seat allocation vs. approved intake cap. Flags exceeding or near-capacity programmes.
+                  </p>
                 </div>
-                <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
-                  Complete finding log of concurrent enrolments, mismatched identifiers, and review determinations.
-                </p>
+                <button
+                  type="button"
+                  onClick={() => handleExportReport('capacity')}
+                  disabled={exportingType === 'capacity'}
+                  className="w-full py-2 px-3 rounded-lg bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] hover:border-[var(--color-brand-yellow)] text-xs font-semibold flex items-center justify-center gap-2 text-[var(--color-text-primary)] transition-colors"
+                >
+                  {exportingType === 'capacity' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-[var(--color-brand-yellow)]" />
+                  )}
+                  <span>Download Capacity CSV</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => handleExportReport('findings')}
-                disabled={exportingType === 'findings'}
-                className="w-full py-2 px-3 rounded-lg bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] hover:border-[#F70063] text-xs font-semibold flex items-center justify-center gap-2 text-[var(--color-text-primary)] transition-colors"
-              >
-                {exportingType === 'findings' ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Download className="w-3.5 h-3.5 text-[#F70063]" />
-                )}
-                <span>Download Findings CSV</span>
-              </button>
+
+              {/* Report 3: Duplicate & Integrity Findings */}
+              <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-primary)]">
+                    <ShieldAlert className="w-4 h-4 text-[#F70063]" />
+                    <span>Duplicate &amp; Findings Registry</span>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
+                    Complete finding log of concurrent enrolments, mismatched identifiers, and review determinations.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleExportReport('findings')}
+                  disabled={exportingType === 'findings'}
+                  className="w-full py-2 px-3 rounded-lg bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] hover:border-[#F70063] text-xs font-semibold flex items-center justify-center gap-2 text-[var(--color-text-primary)] transition-colors"
+                >
+                  {exportingType === 'findings' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-[#F70063]" />
+                  )}
+                  <span>Download Findings CSV</span>
+                </button>
+              </div>
+
+              {/* Report 4: Audit Trail */}
+              <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-primary)]">
+                    <History className="w-4 h-4 text-emerald-400" />
+                    <span>Regulatory Audit Trail</span>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
+                    Immutable log of all user actions, batches committed, capacity changes, and adjudication outcomes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleExportReport('audit')}
+                  disabled={exportingType === 'audit'}
+                  className="w-full py-2 px-3 rounded-lg bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] hover:border-emerald-400 text-xs font-semibold flex items-center justify-center gap-2 text-[var(--color-text-primary)] transition-colors"
+                >
+                  {exportingType === 'audit' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  )}
+                  <span>Download Audit Trail CSV</span>
+                </button>
+              </div>
+
+              {/* Report 5: Verification Query History */}
+              <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-primary)]">
+                    <ShieldCheck className="w-4 h-4 text-purple-400" />
+                    <span>Verification Query History</span>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">
+                    Query history of individual APAAR lookups, validation timestamps, source classification, and outcomes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleExportReport('verification-history')}
+                  disabled={exportingType === 'verification-history'}
+                  className="w-full py-2 px-3 rounded-lg bg-[var(--color-surface-card)] border border-[var(--color-border-subtle)] hover:border-purple-400 text-xs font-semibold flex items-center justify-center gap-2 text-[var(--color-text-primary)] transition-colors"
+                >
+                  {exportingType === 'verification-history' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-purple-400" />
+                  )}
+                  <span>Download Query History CSV</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -680,10 +878,10 @@ export const FindingsReviewPanel: React.FC<FindingsReviewPanelProps> = ({ onFind
                     className="w-full px-3 py-2 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-brand-blue)] font-medium"
                     required
                   >
-                    <option value="RESOLVED_CONFIRMED_VIOLATION">Confirm Violation (Duplicate or Over-Cap Confirmed)</option>
-                    <option value="RESOLVED_CLEARED">Clear Finding (Legitimate Concurrent/Approved Transfer)</option>
-                    <option value="IN_REVIEW">Under Active Investigation</option>
-                    <option value="DISMISSED">Dismiss (False Alarm / Retracted)</option>
+                    <option value="RESOLVED_CONFIRMED_VIOLATION">Confirmed Duplicate / Capacity Violation</option>
+                    <option value="DISMISSED">False Positive (Dismiss Finding)</option>
+                    <option value="RESOLVED_CLEARED">Resolved (Approved Concurrent / Cleaned)</option>
+                    <option value="IN_REVIEW">Pending Review (Under Active Review)</option>
                   </select>
                 </div>
 

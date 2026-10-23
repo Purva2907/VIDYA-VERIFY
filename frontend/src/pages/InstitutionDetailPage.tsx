@@ -776,7 +776,13 @@ export const InstitutionDetailPage: React.FC = () => {
                         )}
                       </div>
                       <span className={`font-mono-code font-bold ${
-                        p.status === 'EXCEEDED' ? 'text-[#F70063]' : p.status === 'NEAR_CAPACITY' ? 'text-[#FFCD54]' : 'text-[var(--color-brand-blue)]'
+                        p.status === 'EXCEEDED' || p.status === 'OVER_CAPACITY'
+                          ? 'text-[#F70063]'
+                          : p.status === 'NEAR_CAPACITY' || p.status === 'CAPACITY_REACHED'
+                          ? 'text-[#FFCD54]'
+                          : p.status === 'INTAKE_MISSING' || p.status === 'REQUIRES_REVIEW'
+                          ? 'text-amber-400'
+                          : 'text-[var(--color-brand-blue)]'
                       }`}>
                         {p.intake_current} admitted / {p.intake_cap} quota ({p.utilization_pct}%)
                       </span>
@@ -785,10 +791,33 @@ export const InstitutionDetailPage: React.FC = () => {
                     <div className="w-full h-2 rounded-full bg-[var(--color-surface-hover)] overflow-hidden">
                       <div
                         className={`h-full ${
-                          p.status === 'EXCEEDED' ? 'bg-[#F70063]' : p.status === 'NEAR_CAPACITY' ? 'bg-[#FFCD54]' : 'bg-[var(--color-brand-blue)]'
+                          p.status === 'EXCEEDED' || p.status === 'OVER_CAPACITY'
+                            ? 'bg-[#F70063]'
+                            : p.status === 'NEAR_CAPACITY' || p.status === 'CAPACITY_REACHED'
+                            ? 'bg-[#FFCD54]'
+                            : p.status === 'INTAKE_MISSING' || p.status === 'REQUIRES_REVIEW'
+                            ? 'bg-amber-400'
+                            : 'bg-[var(--color-brand-blue)]'
                         }`}
                         style={{ width: `${Math.min(p.utilization_pct, 100)}%` }}
                       />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono-code ${
+                        p.status === 'EXCEEDED' || p.status === 'OVER_CAPACITY'
+                          ? 'bg-[#F70063]/15 text-[#F70063] border border-[#F70063]/30'
+                          : p.status === 'NEAR_CAPACITY' || p.status === 'CAPACITY_REACHED'
+                          ? 'bg-[#FFCD54]/15 text-[#FFCD54] border border-[#FFCD54]/30'
+                          : p.status === 'INTAKE_MISSING' || p.status === 'REQUIRES_REVIEW'
+                          ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                          : 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30'
+                      }`}>
+                        {p.status}
+                      </span>
+                      {p.status_explanation && (
+                        <span className="text-[11px] text-[var(--color-text-secondary)]">{p.status_explanation}</span>
+                      )}
                     </div>
                   </div>
                 ))}

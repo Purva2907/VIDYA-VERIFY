@@ -46,15 +46,27 @@ export const ImportPage: React.FC = () => {
 8834-1120-7463-IN,Vikramaditya Rao,IND-AICTE-3109,Kolkata Engineering College,B.Tech Electrical & Electronics,2024-2028,60,60,SC,Male,2004-06-18
 1102-4490-7812-IN,Meera Sundaram,IND-AICTE-1042,Delhi Institute of Technology,B.Tech Computer Science & AI,2024-2028,120,120,ST,Female,2005-09-14`;
 
-  const handleDownloadSample = () => {
-    const blob = new Blob([sampleCsvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'AICTE_Enrolment_Manifest_Template.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadSample = async () => {
+    try {
+      const template = await api.getImportTemplate();
+      const blob = new Blob([template.csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', template.filename || 'AICTE_Enrolment_Manifest_Template.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      const blob = new Blob([sampleCsvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'AICTE_Enrolment_Manifest_Template.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   /**

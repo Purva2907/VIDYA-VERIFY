@@ -56,6 +56,28 @@ def _extract_str(row: Dict[str, Any], *keys: str) -> Optional[str]:
     return None
 
 
+def sanitize_csv_cell(val: Any) -> str:
+    """Mitigates spreadsheet formula injection by prepending dangerous leading characters with a single quote."""
+    if val is None:
+        return ""
+    val_str = str(val).strip()
+    if val_str and val_str[0] in ("=", "+", "-", "@", "\t", "\r"):
+        val_str = f"'{val_str}"
+    return val_str.replace('"', '""')
+
+
+@router.get("/template")
+def download_import_template():
+    """Returns downloadable CSV template with standard AICTE enrolment headers."""
+    header = "APAAR_ID,STUDENT_NAME,INSTITUTE_CODE,INSTITUTE_NAME,PROGRAMME,ADMISSION_YEAR,INTAKE_CURRENT,INTAKE_CAP,CATEGORY,GENDER,DOB,EMAIL,ENROLLMENT_NUMBER"
+    sample_row = "9024-8172-5501-IN,Aarav V. Suryavanshi,IND-AICTE-1042,Delhi Institute of Technology,B.Tech Computer Science & AI,2024-2028,120,120,General,Male,2005-04-12,aarav.surya@dit.ac.in,ENR-2024-001"
+    content = f"{header}\n{sample_row}\n"
+    return {
+        "filename": "AICTE_Enrolment_Manifest_Template.csv",
+        "csv": content,
+    }
+
+
 @router.post("/preview", response_model=ImportPreviewResponse)
 def preview_batch_manifest(records: List[Dict[str, Any]], authorization: Optional[str] = Header(None)):
     """
@@ -79,6 +101,7 @@ def preview_batch_manifest(records: List[Dict[str, Any]], authorization: Optiona
     programme_mapping_issues = []
     intake_warnings = []
     sample_preview = []
+    seen_in_preview: Dict[str, int] = {}
 
     # Count prospective enrolments per (institute_code, programme)
     prospective_programme_counts: Dict[str, int] = {}
@@ -104,6 +127,12 @@ def preview_batch_manifest(records: List[Dict[str, Any]], authorization: Optiona
             issues.append("Missing mandatory APAAR identifier")
         elif not SandboxAPAARAdapter.validate_format(apaar):
             issues.append("Invalid APAAR ID format (must be 12 digits or 'XXXX-XXXX-XXXX-IN')")
+        else:
+            norm = IntegrityEngine.normalize_apaar(apaar)
+            if norm in seen_in_preview:
+                issues.append(f"In-manifest duplicate: Identifier appears multiple times (previously in row {seen_in_preview[norm]})")
+            else:
+                seen_in_preview[norm] = idx
 
         if not student_name:
             issues.append("Missing student name")
@@ -223,6 +252,7 @@ def process_batch_manifest(
         s.apaar_id.strip(): s for s in STUDENT_LEDGER
     }
     batch_programme_counts: Dict[str, int] = {}
+    seen_in_batch: Dict[str, int] = {}
 
     for idx, item in enumerate(records, start=1):
         if not isinstance(item, dict):
@@ -266,6 +296,18 @@ def process_batch_manifest(
             errors_list.append(msg)
             rejected_details.append(RejectedRowError(row_index=idx, apaar_id=apaar, student_name=student_name, institute_code=inst_code, error_reason=msg))
             continue
+
+        # In-manifest repeated duplicate check
+        norm_apaar_key = IntegrityEngine.normalize_apaar(apaar)
+        if norm_apaar_key in seen_in_batch:
+            skipped_count += 1
+            duplicate_count += 1
+            prev_row = seen_in_batch[norm_apaar_key]
+            msg = f"Row {idx} ({apaar}): Duplicate record in manifest — identifier previously appeared on Row {prev_row}."
+            errors_list.append(msg)
+            rejected_details.append(RejectedRowError(row_index=idx, apaar_id=apaar, student_name=student_name, institute_code=inst_code, error_reason=msg))
+            continue
+        seen_in_batch[norm_apaar_key] = idx
 
         # Node security check
         if user_inst and inst_code != user_inst:
@@ -577,13 +619,13 @@ def process_batch_manifest(
 
 @router.post("/export-errors-csv")
 def export_errors_csv(errors: List[RejectedRowError]):
-    """Exports list of validation errors as downloadable CSV content."""
+    """Exports list of validation errors as downloadable CSV content with formula injection mitigation."""
     lines = ["ROW_INDEX,APAAR_ID,STUDENT_NAME,INSTITUTE_CODE,ERROR_REASON"]
     for e in errors:
-        apaar = e.apaar_id or ""
-        name = (e.student_name or "").replace('"', '""')
-        code = e.institute_code or ""
-        reason = e.error_reason.replace('"', '""')
+        apaar = sanitize_csv_cell(e.apaar_id or "")
+        name = sanitize_csv_cell(e.student_name or "")
+        code = sanitize_csv_cell(e.institute_code or "")
+        reason = sanitize_csv_cell(e.error_reason or "")
         lines.append(f'{e.row_index},"{apaar}","{name}","{code}","{reason}"')
     csv_text = "\n".join(lines)
     return {

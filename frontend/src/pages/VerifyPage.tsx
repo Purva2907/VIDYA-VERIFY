@@ -441,7 +441,9 @@ export const VerifyPage: React.FC = () => {
                   {/* Result Header Status Banner */}
                   <div
                     className={`p-4 border-b border-[#182633] flex items-center justify-between ${
-                      result.is_valid
+                      result.status === 'NOT_FOUND' || result.status === 'VALID_FORMAT_UNREGISTERED'
+                        ? 'bg-amber-500/10'
+                        : result.is_valid
                         ? 'bg-[#2391FF]/10'
                         : result.has_duplicate_collision
                         ? 'bg-[#F70063]/10'
@@ -449,7 +451,9 @@ export const VerifyPage: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      {result.is_valid ? (
+                      {result.status === 'NOT_FOUND' || result.status === 'VALID_FORMAT_UNREGISTERED' ? (
+                        <AlertCircle className="w-6 h-6 text-amber-400" />
+                      ) : result.is_valid ? (
                         <CheckCircle2 className="w-6 h-6 text-[#2391FF]" />
                       ) : result.has_duplicate_collision ? (
                         <CopyX className="w-6 h-6 text-[#F70063]" />
@@ -459,7 +463,9 @@ export const VerifyPage: React.FC = () => {
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-bold text-sm text-white">
-                            {result.is_valid
+                            {result.status === 'NOT_FOUND' || result.status === 'VALID_FORMAT_UNREGISTERED'
+                              ? 'Valid Format — No Enrolment Record'
+                              : result.is_valid
                               ? 'Academic Integrity Verified'
                               : result.has_duplicate_collision
                               ? 'Duplicate Enrolment Flagged'
@@ -486,7 +492,9 @@ export const VerifyPage: React.FC = () => {
 
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold uppercase font-mono-code ${
-                        result.is_valid
+                        result.status === 'NOT_FOUND' || result.status === 'VALID_FORMAT_UNREGISTERED'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : result.is_valid
                           ? 'bg-[#2391FF] text-white'
                           : result.has_duplicate_collision
                           ? 'bg-[#F70063] text-white'
